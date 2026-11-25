@@ -1,0 +1,49 @@
+name: Veriyi güncelle ve siteyi yayınla
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # Hafta içi her gün 13:37 ve 16:37 UTC (Türkiye saatiyle 16:37 ve 19:37)
+    - cron: "37 13 * * 1-5"
+    - cron: "37 16 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: EVDS verisini çek
+        env:
+          EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
+        run: python scripts/fetch_evds.py
+      - name: Site klasörünü hazırla
+        run: |
+          mkdir -p _site
+          cp -r index.html assets rezerv data _site/
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
