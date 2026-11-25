@@ -56,7 +56,8 @@ def parse_date(item):
     return None
 
 
-def series(code, start, end, chunk_years=8):
+def series(code, start, end, chunk_years=2):
+    # EVDS bir istekte en fazla ~1000 gözlem döndürüyor; günlük seriler 2 yıllık parçalarla çekilir.
     col = code.replace(".", "_")
     out = {}
     s = start
@@ -94,7 +95,7 @@ def main():
     today = dt.date.today()
     data = {}
     for k, code in WEEKLY.items():
-        data[k] = series(code, START, today)
+        data[k] = series(code, START, today, chunk_years=15)
     for k, code in DAILY_TO_WEEKLY.items():
         w = to_friday_weekly(series(code, START, today))
         data[k] = {d: v for d, v in w.items() if d <= today}
