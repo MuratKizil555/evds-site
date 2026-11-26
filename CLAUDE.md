@@ -73,7 +73,7 @@ Site sol tarafta bir menüyle bölümlere ayrılır. Her bölüm bir sayfadır.
 - Seriler (bie_apifon, iş günü, milyon TL / %): TP.APIFON1.TOP (fonlama), TP.APIFON2.TOP (sterilizasyon), TP.APIFON3 (net fonlama = A−B, TCMB yayımlar), TP.APIFON4 (AOFM). 2011'den beri.
 - Üstte net fonlama ve AOFM kutuları; tarih kontrolleri Rezerv'le aynı (1W…Tümü, varsayılan YTD).
 - Grafik 1: yalnızca net fonlama çubukları (pozitif koyu mavi, negatif kırmızı), sıfır çizgisi. Grafik 2: AOFM düz çizgi grafiği.
-- Grafikler tam genişlikte (yatay yayılır, çubuk en fazla 18 px). Özet paneli grafiklerin altında: yalnızca net fonlama ve AOFM (değer + önceki iş gününe göre değişim). Tooltip de yalnızca bu ikisi. Varsayılan seçili gün son gün; aynı güne ikinci tıklama aralık özetine döner (başlangıca göre değişim).
+- Grafikler tam genişlikte; x ekseni yalnızca veri olan iş günlerinden oluşur (tatil/hafta sonu boşluğu yok), çubuk en fazla 18 px. Tooltip: tarih, net fonlama, AOFM. Özet paneli ve gün seçimi kullanıcı isteğiyle kaldırıldı.
 
 ### Rezerv bölümü — sayfa özellikleri
 - **Brüt / Net** düğmeleriyle iki görünüm. Üstte yalnızca son değer ve tarih; değişim pencereleri (1W/1M/YTD/1Y kutuları) ve alt bölümler kullanıcı isteğiyle kaldırıldı.

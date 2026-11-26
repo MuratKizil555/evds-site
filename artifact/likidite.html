@@ -98,7 +98,7 @@ th{font-weight:500;color:var(--mut);font-size:13px}
 .cards2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:24px;margin-top:8px}
 .cards2>div{border-top:2px solid var(--ink);padding-top:10px}.cards2 b{display:block;font-size:13px;font-weight:500;color:var(--mut)}.cards2 .v{font-size:34px;font-weight:800;font-stretch:112%;line-height:1.1}.cards2 .c{font-size:14px;margin-top:2px}
 .pick{margin:6px 0 12px}.pick b{display:block;font-size:13px;font-weight:500;color:var(--mut)}.pick span{font-size:30px;font-weight:800;font-stretch:112%}
-.hov{cursor:pointer}
+.hov{cursor:default}
 </style>
 </head>
 <body>
@@ -128,7 +128,6 @@ th{font-weight:500;color:var(--mut);font-size:13px}
       <h2 class="ch" style="margin-top:28px">Ağırlıklı ortalama fonlama maliyeti</h2>
       <div class="fig" id="f2" style="min-height:240px"><svg id="s2" role="img" aria-label="Günlük TCMB ağırlıklı ortalama fonlama maliyeti, yüzde"></svg><div class="tip" id="t2"></div></div>
     </div>
-    <aside class="pie" id="pie" aria-live="polite" style="border-top-color:var(--ink)"><h3>Özet</h3><div class="dt">Veri yükleniyor…</div></aside>
   </div>
   <div class="rng" id="rng"></div>
   <p class="status" id="status"></p>
@@ -180,25 +179,24 @@ function smooth(p){if(p.length<3)return 'M'+p.map(q=>q.join(',')).join('L');cons
   for(let i=0;i<n-1;i++){dx[i]=p[i+1][0]-p[i][0];m[i]=(p[i+1][1]-p[i][1])/(dx[i]||1)}
   t[0]=m[0];t[n-1]=m[n-2];for(let i=1;i<n-1;i++)t[i]=m[i-1]*m[i]<=0?0:3*(dx[i-1]+dx[i])/((2*dx[i]+dx[i-1])/m[i-1]+(dx[i]+2*dx[i-1])/m[i]);
   let d='M'+p[0][0]+','+p[0][1];for(let i=0;i<n-1;i++){const h=dx[i]/3;d+=`C${p[i][0]+h},${p[i][1]+t[i]*h} ${p[i+1][0]-h},${p[i+1][1]-t[i+1]*h} ${p[i+1][0]},${p[i+1][1]}`}return d}
-function axisX(x0,x1,X,H,narrow){const spanY=(x1-x0)/(365*864e5);const ticks=[];const s0=new Date(x0);let g='';
-  if(spanY>2){const k=Math.max(1,Math.ceil(spanY/(narrow?4:8)));for(let y=s0.getUTCFullYear()+1;Date.UTC(y,0,1)<=x1;y++)if(y%k===0)ticks.push([Date.UTC(y,0,1),String(y)])}
-  else if(spanY>.1){const k=spanY>1?3:spanY>.5?2:1;let d=new Date(Date.UTC(s0.getUTCFullYear(),s0.getUTCMonth()+1,1));while(d.getTime()<=x1){if(d.getUTCMonth()%k===0)ticks.push([d.getTime(),d.toLocaleDateString('tr-TR',{month:'short',year:'2-digit',timeZone:'UTC'})]);d.setUTCMonth(d.getUTCMonth()+1)}}
-  else{let d=new Date(x0);d.setUTCHours(0,0,0,0);d.setUTCDate(d.getUTCDate()+1);const st=spanY>.05?7:1;while(d.getTime()<=x1){ticks.push([d.getTime(),d.toLocaleDateString('tr-TR',{day:'2-digit',month:'short',timeZone:'UTC'})]);d.setUTCDate(d.getUTCDate()+st)}}
-  for(const [t,l] of ticks)g+=`<text x="${X(t)}" y="${H-8}" text-anchor="middle" font-size="12" fill="${css('--mut')}">${l}</text>`;return g}
+function axisX(view,X,H,narrow){if(!view.length)return '';const spanY=(view[view.length-1].d-view[0].d)/(365*864e5);let g='',last=null,lastX=-1e9;const minGap=narrow?48:64;
+  const key=spanY>2?(d=>d.getUTCFullYear()):spanY>.25?(d=>d.getUTCFullYear()*12+d.getUTCMonth()):(d=>Math.floor((d.getTime()/864e5+3)/7));
+  const lab=spanY>2?(d=>String(d.getUTCFullYear())):spanY>.25?(d=>d.toLocaleDateString('tr-TR',{month:'short',year:'2-digit',timeZone:'UTC'})):(d=>d.toLocaleDateString('tr-TR',{day:'2-digit',month:'short',timeZone:'UTC'}));
+  for(const r of view){const d=new Date(r.d),k=key(d);if(k!==last){const x=X(r.d);if(last!==null&&x-lastX>=minGap){g+=`<text x="${x}" y="${H-8}" text-anchor="middle" font-size="12" fill="${css('--mut')}">${lab(d)}</text>`;lastX=x}else if(last===null)lastX=x-minGap*.6;last=k}}
+  return g}
 function tipHTML(r){return `<b>${df.format(new Date(r.d))}</b><br>Net fonlama: <b>${bn(r.n)}</b> mr TL`+(r.r!=null?`<br>AOFM: <b>${pc(r.r)}</b>`:'')}
 function frame(svg){const W=svg.clientWidth,H=svg.clientHeight,narrow=W<520;return {W,H,narrow,m:{l:narrow?38:52,r:12,t:10,b:28}}}
-function xscale(view,w,ml){const day=864e5;const x0=view[0].d-day*.6,x1=Math.max(view[view.length-1].d+day*.6,x0+30*day);return {x0,x1,X:d=>ml+(d-x0)/(x1-x0)*w,bw:Math.min(18,Math.max(1,w*day/(x1-x0)*.8))}}
+function xscale(view,w,ml){const n=Math.max(view.length,22);const idx=new Map(view.map((r,i)=>[r.d,i]));return {x0:0,x1:n,X:d=>ml+((idx.get(d)??0)+.5)/n*w,bw:Math.min(18,Math.max(1,w/n*.8))}}
 function hover(svg,tip,view,X,x0,x1,m,w,W){const hov=svg.querySelector('.hov'),hx=svg.querySelector('.hx');
-  const near=e=>{const rc=svg.getBoundingClientRect();const p=e.clientX-rc.left;const t=x0+(p-m.l)/w*(x1-x0);let b=view[0];for(const q of view)if(Math.abs(q.d-t)<Math.abs(b.d-t))b=q;return b};
+  const near=e=>{const rc=svg.getBoundingClientRect();const p=e.clientX-rc.left;let b=view[0],bd=1e9;for(const q of view){const dd=Math.abs(X(q.d)-p);if(dd<bd){bd=dd;b=q}}return b};
   hov.addEventListener('mousemove',e=>{const b=near(e),bx=X(b.d);hx.setAttribute('x1',bx);hx.setAttribute('x2',bx);hx.setAttribute('visibility','visible');tip.innerHTML=tipHTML(b);tip.style.display='block';const tw=tip.offsetWidth;tip.style.left=(bx+12+tw>W?Math.max(bx-tw-12,0):bx+12)+'px';tip.style.top='12px'});
-  hov.addEventListener('mouseleave',()=>{tip.style.display='none';hx.setAttribute('visibility','hidden')});
-  hov.addEventListener('click',e=>{const b=near(e);sel=(sel===b.d)?null:b.d;draw1(cur);draw2(cur);panel(cur)})}
+  hov.addEventListener('mouseleave',()=>{tip.style.display='none';hx.setAttribute('visibility','hidden')});}
 function draw1(view){const svg=$('s1');const {W,H,narrow,m}=frame(svg);if(!W||!H)return;if(!view.length){svg.innerHTML='';return}
   const w=W-m.l-m.r,h=H-m.t-m.b;const {x0,x1,X,bw}=xscale(view,w,m.l);
   let ymax=Math.max(0,...view.map(r=>r.n)),ymin=Math.min(0,...view.map(r=>r.n));const sp=(ymax-ymin)||1;ymax+=sp*.08;if(ymin<0)ymin-=sp*.08;
   const Y=v=>m.t+(ymax-v)/(ymax-ymin)*h;const step=niceStep((ymax-ymin)/1000,narrow?4:6)*1000;let g='';
   for(let v=Math.ceil(ymin/step)*step;v<=ymax;v+=step)g+=`<line x1="${m.l}" x2="${m.l+w}" y1="${Y(v)}" y2="${Y(v)}" stroke="${css('--line')}"/><text x="${m.l-6}" y="${Y(v)+4}" text-anchor="end" font-size="12" fill="${css('--mut')}">${nf.format(v/1000).replace(',0','')}</text>`;
-  g+=axisX(x0,x1,X,H,narrow);const pc_=css('--fx'),nc=css('--red');
+  g+=axisX(view,X,H,narrow);const pc_=css('--fx'),nc=css('--red');
   for(const r of view){const y1=Y(Math.max(0,r.n)),y2=Y(Math.min(0,r.n));g+=`<rect x="${X(r.d)-bw/2}" y="${y1}" width="${bw}" height="${Math.max(.5,y2-y1)}" fill="${r.n<0?nc:pc_}"/>`}
   const sr=sel!=null?view.find(r=>r.d===sel):null;if(sr){const y1=Y(Math.max(0,sr.n)),y2=Y(Math.min(0,sr.n));g+=`<rect x="${X(sr.d)-bw/2-2}" y="${y1-2}" width="${bw+4}" height="${y2-y1+4}" fill="none" stroke="${css('--ink')}" stroke-width="2"/>`}
   g+=`<line x1="${m.l}" x2="${m.l+w}" y1="${Y(0)}" y2="${Y(0)}" stroke="${css('--ink')}" stroke-width="1.5"/>`;
@@ -209,14 +207,14 @@ function draw2(view){const svg=$('s2');const {W,H,narrow,m}=frame(svg);const v2=
   let lo=Math.min(...v2.map(r=>r.r)),hi=Math.max(...v2.map(r=>r.r));const pad=Math.max(1,(hi-lo)*.15);lo=Math.max(0,lo-pad);hi+=pad;
   const Y=v=>m.t+(hi-v)/(hi-lo)*h;const step=niceStep(hi-lo,narrow?3:5);let g='';
   for(let v=Math.ceil(lo/step)*step;v<=hi;v+=step)g+=`<line x1="${m.l}" x2="${m.l+w}" y1="${Y(v)}" y2="${Y(v)}" stroke="${css('--line')}"/><text x="${m.l-6}" y="${Y(v)+4}" text-anchor="end" font-size="12" fill="${css('--mut')}">%${Math.round(v*10)/10}</text>`;
-  g+=axisX(x0,x1,X,H,narrow);
+  g+=axisX(view,X,H,narrow);
   const p='M'+v2.map(r=>X(r.d)+','+Y(r.r)).join('L');
   g+=`<path d="${p}" fill="none" stroke="${css('--fx')}" stroke-width="2.2" stroke-linejoin="round"/>`;
   const L=(sel!=null&&v2.find(r=>r.d===sel))||v2[v2.length-1];if(sel!=null&&L.d===sel)g+=`<line x1="${X(L.d)}" x2="${X(L.d)}" y1="${m.t}" y2="${m.t+h}" stroke="${css('--line')}" stroke-width="2"/>`;g+=`<circle cx="${X(L.d)}" cy="${Y(L.r)}" r="5" fill="${css('--fx')}" stroke="${css('--bg')}" stroke-width="2"/>`;
   g+=`<line class="hx" y1="${m.t}" y2="${m.t+h}" stroke="${css('--ink')}" visibility="hidden"/><rect class="hov" x="${m.l}" y="${m.t}" width="${w}" height="${h}" fill="transparent"/>`;
   svg.innerHTML=g;hover(svg,$('t2'),v2,X,x0,x1,m,w,W)}
 function refAt(arr,t){let lo=0,hi=arr.length-1,ans=null;while(lo<=hi){const m=(lo+hi)>>1;if(arr[m].d<=t){ans=arr[m];lo=m+1}else hi=m-1}return ans}
-function panel(view){const el=$('pie');const all=rows();const cl=v=>v>0?'up':v<0?'dn':'fl';
+function panel(view){const el=$('pie');if(!el)return;const all=rows();const cl=v=>v>0?'up':v<0?'dn':'fl';
   const card=(t,v,c)=>`<div><b>${t}</b><div class="v">${v}</div><div class="c">${c}</div></div>`;
   const ch=(d,isR)=>d==null?'<span class="fl">—</span>':`<span class="${cl(d)}">${isR?(d>0?'+':d<0?'−':'')+rf.format(Math.abs(d))+' puan':sg(d)+' mr TL'}</span>`;
   if(sel!=null){const i=all.findIndex(r=>r.d===sel);const r=all[i],p=i>0?all[i-1]:null;if(!r){sel=null;return panel(view)}
@@ -231,7 +229,7 @@ function render(){const all=rows();if(!all.length)return;const L=all[all.length-
   $('kN').firstChild.nodeValue=bn(L.n)+' ';$('kNd').textContent='Son veri: '+df.format(new Date(L.d));
   const lr=[...all].reverse().find(r=>r.r!=null);if(lr){$('kR').textContent=pc(lr.r);$('kRd').textContent='Son veri: '+df.format(new Date(lr.d))}
   const from=range.from??(L.d-365*864e5),to=range.to??L.d;const a0=refAt(all,from)||all.find(r=>r.d>=from);
-  const view=all.filter(r=>r.d>=(a0?a0.d:from)&&r.d<=to);cur=view;if(sel==null||!view.some(r=>r.d===sel))sel=view.length?view[view.length-1].d:null;draw1(view);draw2(view);panel(view);
+  const view=all.filter(r=>r.d>=(a0?a0.d:from)&&r.d<=to);cur=view;sel=null;draw1(view);draw2(view);panel(view);
   $('rng').textContent=view.length?`Grafik: ${df.format(new Date(view[0].d))} – ${df.format(new Date(view[view.length-1].d))} · ilk gün başlangıç (referans) günüdür · Kaynak: TCMB EVDS, ${Object.values(S).join(', ')}`:'Seçili aralıkta veri yok.'}
 const ro=new ResizeObserver(()=>{draw1(cur);draw2(cur)});ro.observe($('s1'));ro.observe($('s2'));
 function setPreset(y){preset=y;for(const b of document.querySelectorAll('#presets button'))b.setAttribute('aria-pressed',String(b.dataset.y===y));
