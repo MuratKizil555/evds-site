@@ -128,7 +128,7 @@ input[type=month]{font:16px Archivo,sans-serif;padding:8px 10px;border:1px solid
     </div>
   </div>
   <h2 class="ch" id="h1">Karşılıksız çek adedi ve oranı</h2>
-  <div class="legend"><span><i style="background:var(--red);height:3px;vertical-align:3px"></i><span id="lg1">Karşılıksız çek adedi (sol eksen)</span></span><span><i style="background:var(--fx);height:3px;vertical-align:3px"></i><span id="lg2">Karşılıksız oranı, % (sağ eksen)</span></span></div>
+  <div class="legend"><span><i style="background:var(--red)"></i><span id="lg1">Karşılıksız çek adedi (sol eksen)</span></span><span><i style="background:var(--fx);height:3px;vertical-align:3px"></i><span id="lg2">Karşılıksız oranı, % (sağ eksen)</span></span></div>
   <div class="fig" id="f1" style="min-height:420px"><svg id="s1" role="img" aria-label="Aylık karşılıksız çek"></svg><div class="tip" id="t1"></div></div>
   <div class="rng" id="rng"></div>
   <p class="status" id="status"></p>
@@ -182,14 +182,13 @@ function draw(view){const svg=$('s1');const {W,H,narrow}=frame(svg);if(!W||!H)re
   const va=view.filter(r=>kv(r)!=null),vb=view.filter(r=>rv(r)!=null);if(!va.length){svg.innerHTML='';return}
   const w=W-m.l-m.r,h=H-m.t-m.b;const {X}=xscale(view,w,m.l);
   const rng=(arr,f)=>{let lo=Math.min(...arr.map(f)),hi=Math.max(...arr.map(f));const pad=(hi-lo)*.12||Math.abs(hi)*.1||1;return [Math.max(0,lo-pad),hi+pad]};
-  const [lo1,hi1]=rng(va,kv),[lo2,hi2]=vb.length?rng(vb,rv):[0,1];
+  const [,hi1]=rng(va,kv),lo1=0,[lo2,hi2]=vb.length?rng(vb,rv):[0,1];
   const Y1=v=>m.t+(hi1-v)/(hi1-lo1)*h,Y2=v=>m.t+(hi2-v)/(hi2-lo2)*h;const n=narrow?4:5;let g='';
   const st1=niceStep(hi1-lo1,n);for(let v=Math.ceil(lo1/st1)*st1;v<=hi1;v+=st1)g+=`<line x1="${m.l}" x2="${m.l+w}" y1="${Y1(v)}" y2="${Y1(v)}" stroke="${css('--line')}"/><text x="${m.l-6}" y="${Y1(v)+4}" text-anchor="end" font-size="12" fill="${css('--red')}">${mode==='adet'?af.format(v):tf.format(v/1e6).replace(/,00$/,'')}</text>`;
   const st2=niceStep(hi2-lo2,n);for(let v=Math.ceil(lo2/st2)*st2;v<=hi2;v+=st2)g+=`<text x="${m.l+w+6}" y="${Y2(v)+4}" text-anchor="start" font-size="12" fill="${css('--fx')}">%${(Math.round(v*100)/100).toLocaleString('tr-TR')}</text>`;
   g+=axisX(view,X,H,narrow);const c1=css('--red'),c2=css('--fx');
+  const bw=Math.min(22,Math.max(1,w/Math.max(view.length,12)*.7));for(const r of va){const y=Y1(kv(r));g+=`<rect x="${X(r.d)-bw/2}" y="${y}" width="${bw}" height="${Math.max(.5,m.t+h-y)}" fill="${c1}" opacity=".85"/>`}
   if(vb.length)g+=`<path d="M${vb.map(r=>X(r.d)+','+Y2(rv(r))).join('L')}" fill="none" stroke="${c2}" stroke-width="2" stroke-dasharray="6 4" stroke-linejoin="round"/>`;
-  g+=`<path d="M${va.map(r=>X(r.d)+','+Y1(kv(r))).join('L')}" fill="none" stroke="${c1}" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>`;
-  if(va.length<=60)for(const r of va)g+=`<circle cx="${X(r.d)}" cy="${Y1(kv(r))}" r="3" fill="${c1}"/>`;
   g+=`<line class="hx" y1="${m.t}" y2="${m.t+h}" stroke="${css('--ink')}" visibility="hidden"/><rect class="hov" x="${m.l}" y="${m.t}" width="${w}" height="${h}" fill="transparent"/>`;
   svg.innerHTML=g;const tip=$('t1'),hov=svg.querySelector('.hov'),hx=svg.querySelector('.hx');
   hov.addEventListener('mousemove',e=>{const p=e.clientX-svg.getBoundingClientRect().left;let b=va[0],bd=1e9;for(const q of va){const dd=Math.abs(X(q.d)-p);if(dd<bd){bd=dd;b=q}}const bx=X(b.d);

@@ -79,7 +79,7 @@ Site sol tarafta bir menüyle bölümlere ayrılır. Her bölüm bir sayfadır.
 ### Çek bölümü — sayfa özellikleri
 - Seriler (bie_btocek, aylık, 2008'den): TP.BTO1 toplam ibraz edilen çek adedi, TP.BTO2 toplam ibraz edilen çek tutarı (bin TL), TP.BTO3 karşılıksız çek adedi, TP.BTO4 karşılıksız çek tutarı (bin TL). Tutarlar milyar TL gösterilir (÷10⁶), nominal.
 - **Adet / Tutar** düğmeleri tüm sayfayı değiştirir. Üstte üç kutu: karşılıksız, toplam ibraz, karşılıksız oranı (son ay).
-- Tek grafik: karşılıksız çek (adet ya da tutar) kırmızı düz çizgi, sol eksen + karşılıksız oranı (karşılıksız ÷ toplam ibraz × 100) mavi kesikli çizgi, sağ eksen. Formül sayfada gösterilmez (kullanıcı isteği).
+- Tek grafik: karşılıksız çek (adet ya da tutar) kırmızı çubuklar, sol eksen (sıfırdan başlar) + karşılıksız oranı (karşılıksız ÷ toplam ibraz × 100) mavi kesikli çizgi, sağ eksen. Formül sayfada gösterilmez (kullanıcı isteği).
 - Tarih: ay seçici + YTD · 1Y · 3Y · 5Y · 10Y · Tümü; varsayılan 3Y. Grafik altında "Kaynak: EVDS".
 
 ### Rezerv bölümü — sayfa özellikleri
