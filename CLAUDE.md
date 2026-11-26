@@ -69,9 +69,11 @@ Site sol tarafta bir menüyle bölümlere ayrılır. Her bölüm bir sayfadır.
 - Likidite: https://claude.ai/artifact/JMkyzuvXxi3eBdbDdC3nE6 (slug 8c915683-5b5f-4dee-ae3a-4a0a19e90ccb)
 - `scripts/build_artifact.py` PAGES listesindeki her sayfa için artifact/<sayfa>.html üretir. Yeni sayfa: PAGES'e ekle, yeni artifact oluştur, mcp yeteneğini declare_capabilities ile tanımla.
 
-### Likidite bölümü — taslak (kullanıcı ayrıntıları henüz belirtmedi)
+### Likidite bölümü — sayfa özellikleri
 - Seriler (bie_apifon, iş günü, milyon TL / %): TP.APIFON1.TOP (fonlama), TP.APIFON2.TOP (sterilizasyon), TP.APIFON3 (net fonlama = A−B, TCMB yayımlar), TP.APIFON4 (AOFM). 2011'den beri.
-- İlk öneri: üstte net fonlama ve AOFM kutuları; aynı tarih kontrolleri (1W…Tümü, varsayılan YTD); grafik 1: fonlama (+, mavi) ve sterilizasyon (−, altın) çubukları + net fonlama kırmızı çizgi; grafik 2: AOFM basamaklı çizgi; sağda seçili aralık özeti (başlangıç/son/değişim, ortalama net fonlama, AOFM min/max).
+- Üstte net fonlama ve AOFM kutuları; tarih kontrolleri Rezerv'le aynı (1W…Tümü, varsayılan YTD).
+- Grafik 1: yalnızca net fonlama çubukları (pozitif koyu mavi, negatif kırmızı), sıfır çizgisi. Grafik 2: AOFM düz çizgi grafiği.
+- Sağ panel: seçilen günün bilgileri (net fonlama büyük; fonlama, sterilizasyon, net fonlama, AOFM ve önceki iş gününe göre değişim). Varsayılan seçili gün son gün; aynı güne ikinci tıklama aralık özetine döner.
 
 ### Rezerv bölümü — sayfa özellikleri
 - **Brüt / Net** düğmeleriyle iki görünüm. Üstte yalnızca son değer ve tarih; değişim pencereleri (1W/1M/YTD/1Y kutuları) ve alt bölümler kullanıcı isteğiyle kaldırıldı.

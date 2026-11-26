@@ -93,6 +93,8 @@ th{font-weight:500;color:var(--mut);font-size:13px}
 .tile>b{display:block;font-size:14px;font-weight:500;color:var(--mut);margin-bottom:4px}
 .ch{font-size:18px;font-weight:700;margin:0 0 4px}
 .pie td,.pie th{white-space:nowrap}
+.pick{margin:6px 0 12px}.pick b{display:block;font-size:13px;font-weight:500;color:var(--mut)}.pick span{font-size:30px;font-weight:800;font-stretch:112%}
+.hov{cursor:pointer}
 </style>
 </head>
 <body>
@@ -117,12 +119,12 @@ th{font-weight:500;color:var(--mut);font-size:13px}
   <div class="chartwrap">
     <div>
       <h2 class="ch">TCMB net fonlaması</h2>
-      <div class="legend"><span><i style="background:var(--fx)"></i>Fonlama (+)</span><span><i style="background:var(--gold)"></i>Sterilizasyon (−)</span><span><i style="background:var(--red);height:3px;vertical-align:3px"></i>Net fonlama</span></div>
+      <div class="legend"><span><i style="background:var(--fx)"></i>Net fonlama (TCMB piyasaya TL veriyor)</span><span><i style="background:var(--red)"></i>Net sterilizasyon (TCMB piyasadan TL çekiyor)</span></div>
       <div class="fig" id="f1"><svg id="s1" role="img" aria-label="Günlük TCMB fonlaması, sterilizasyonu ve net fonlama"></svg><div class="tip" id="t1"></div></div>
       <h2 class="ch" style="margin-top:28px">Ağırlıklı ortalama fonlama maliyeti</h2>
       <div class="fig" id="f2" style="min-height:240px"><svg id="s2" role="img" aria-label="Günlük TCMB ağırlıklı ortalama fonlama maliyeti, yüzde"></svg><div class="tip" id="t2"></div></div>
     </div>
-    <aside class="pie" id="pie" aria-live="polite"><h3>Seçili aralık özeti</h3><div class="dt">Veri yükleniyor…</div></aside>
+    <aside class="pie" id="pie" aria-live="polite"><h3>Özet</h3><div class="dt">Veri yükleniyor…</div></aside>
   </div>
   <div class="rng" id="rng"></div>
   <p class="status" id="status"></p>
@@ -166,7 +168,7 @@ const today=new Date();today.setUTCHours(0,0,0,0);
 const bn=v=>(v<0?'−':'')+nf.format(Math.abs(v)/1000);
 const sg=v=>(v>0?'+':v<0?'−':'')+nf.format(Math.abs(v)/1000);
 const pc=v=>'%'+rf.format(v);
-let range={from:null,to:null},preset='ytd',cur=[];
+let range={from:null,to:null},preset='ytd',cur=[],sel=null;
 function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim()}
 function rows(){const ds=[...data.N.keys()].sort((a,b)=>a-b);return ds.map(d=>({d,n:data.N.get(d),a:data.A.get(d)??null,b:data.B.get(d)??null,r:data.R.get(d)??null}))}
 function niceStep(max,n){const raw=max/n,p=10**Math.floor(Math.log10(raw)),f=raw/p;return (f<1.5?1:f<3?2:f<7?5:10)*p}
@@ -185,16 +187,17 @@ function xscale(view,w,ml){const day=864e5;const x0=view[0].d-day*.6,x1=Math.max
 function hover(svg,tip,view,X,x0,x1,m,w,W){const hov=svg.querySelector('.hov'),hx=svg.querySelector('.hx');
   const near=e=>{const rc=svg.getBoundingClientRect();const p=e.clientX-rc.left;const t=x0+(p-m.l)/w*(x1-x0);let b=view[0];for(const q of view)if(Math.abs(q.d-t)<Math.abs(b.d-t))b=q;return b};
   hov.addEventListener('mousemove',e=>{const b=near(e),bx=X(b.d);hx.setAttribute('x1',bx);hx.setAttribute('x2',bx);hx.setAttribute('visibility','visible');tip.innerHTML=tipHTML(b);tip.style.display='block';const tw=tip.offsetWidth;tip.style.left=(bx+12+tw>W?Math.max(bx-tw-12,0):bx+12)+'px';tip.style.top='12px'});
-  hov.addEventListener('mouseleave',()=>{tip.style.display='none';hx.setAttribute('visibility','hidden')})}
+  hov.addEventListener('mouseleave',()=>{tip.style.display='none';hx.setAttribute('visibility','hidden')});
+  hov.addEventListener('click',e=>{const b=near(e);sel=(sel===b.d)?null:b.d;draw1(cur);draw2(cur);panel(cur)})}
 function draw1(view){const svg=$('s1');const {W,H,narrow,m}=frame(svg);if(!W||!H)return;if(!view.length){svg.innerHTML='';return}
   const w=W-m.l-m.r,h=H-m.t-m.b;const {x0,x1,X,bw}=xscale(view,w,m.l);
-  let ymax=Math.max(0,...view.map(r=>Math.max(r.a??0,r.n))),ymin=Math.min(0,...view.map(r=>Math.min(-(r.b??0),r.n)));const sp=(ymax-ymin)||1;ymax+=sp*.06;ymin-=sp*.06;
+  let ymax=Math.max(0,...view.map(r=>r.n)),ymin=Math.min(0,...view.map(r=>r.n));const sp=(ymax-ymin)||1;ymax+=sp*.08;if(ymin<0)ymin-=sp*.08;
   const Y=v=>m.t+(ymax-v)/(ymax-ymin)*h;const step=niceStep((ymax-ymin)/1000,narrow?4:6)*1000;let g='';
   for(let v=Math.ceil(ymin/step)*step;v<=ymax;v+=step)g+=`<line x1="${m.l}" x2="${m.l+w}" y1="${Y(v)}" y2="${Y(v)}" stroke="${css('--line')}"/><text x="${m.l-6}" y="${Y(v)+4}" text-anchor="end" font-size="12" fill="${css('--mut')}">${nf.format(v/1000).replace(',0','')}</text>`;
-  g+=axisX(x0,x1,X,H,narrow);const fc=css('--fx'),sc=css('--gold');
-  for(const r of view){const x=X(r.d)-bw/2;if(r.a)g+=`<rect x="${x}" y="${Y(r.a)}" width="${bw}" height="${Y(0)-Y(r.a)}" fill="${fc}" opacity=".85"/>`;if(r.b)g+=`<rect x="${x}" y="${Y(0)}" width="${bw}" height="${Y(-r.b)-Y(0)}" fill="${sc}" opacity=".85"/>`}
+  g+=axisX(x0,x1,X,H,narrow);const pc_=css('--fx'),nc=css('--red');
+  for(const r of view){const y1=Y(Math.max(0,r.n)),y2=Y(Math.min(0,r.n));g+=`<rect x="${X(r.d)-bw/2}" y="${y1}" width="${bw}" height="${Math.max(.5,y2-y1)}" fill="${r.n<0?nc:pc_}"/>`}
+  const sr=sel!=null?view.find(r=>r.d===sel):null;if(sr){const y1=Y(Math.max(0,sr.n)),y2=Y(Math.min(0,sr.n));g+=`<rect x="${X(sr.d)-bw/2-2}" y="${y1-2}" width="${bw+4}" height="${y2-y1+4}" fill="none" stroke="${css('--ink')}" stroke-width="2"/>`}
   g+=`<line x1="${m.l}" x2="${m.l+w}" y1="${Y(0)}" y2="${Y(0)}" stroke="${css('--ink')}" stroke-width="1.5"/>`;
-  g+=`<path d="${view.length>400?'M'+view.map(r=>X(r.d)+','+Y(r.n)).join('L'):smooth(view.map(r=>[X(r.d),Y(r.n)]))}" fill="none" stroke="${css('--red')}" stroke-width="2" stroke-linejoin="round"/>`;
   g+=`<line class="hx" y1="${m.t}" y2="${m.t+h}" stroke="${css('--ink')}" visibility="hidden"/><rect class="hov" x="${m.l}" y="${m.t}" width="${w}" height="${h}" fill="transparent"/>`;
   svg.innerHTML=g;hover(svg,$('t1'),view,X,x0,x1,m,w,W)}
 function draw2(view){const svg=$('s2');const {W,H,narrow,m}=frame(svg);const v2=view.filter(r=>r.r!=null);if(!W||!H)return;if(!v2.length){svg.innerHTML='';return}
@@ -203,26 +206,37 @@ function draw2(view){const svg=$('s2');const {W,H,narrow,m}=frame(svg);const v2=
   const Y=v=>m.t+(hi-v)/(hi-lo)*h;const step=niceStep(hi-lo,narrow?3:5);let g='';
   for(let v=Math.ceil(lo/step)*step;v<=hi;v+=step)g+=`<line x1="${m.l}" x2="${m.l+w}" y1="${Y(v)}" y2="${Y(v)}" stroke="${css('--line')}"/><text x="${m.l-6}" y="${Y(v)+4}" text-anchor="end" font-size="12" fill="${css('--mut')}">%${Math.round(v*10)/10}</text>`;
   g+=axisX(x0,x1,X,H,narrow);
-  let p='';v2.forEach((r,i)=>{p+=i?`H${X(r.d)}V${Y(r.r)}`:`M${X(r.d)},${Y(r.r)}`});
+  const p='M'+v2.map(r=>X(r.d)+','+Y(r.r)).join('L');
   g+=`<path d="${p}" fill="none" stroke="${css('--fx')}" stroke-width="2.2" stroke-linejoin="round"/>`;
-  const L=v2[v2.length-1];g+=`<circle cx="${X(L.d)}" cy="${Y(L.r)}" r="4" fill="${css('--fx')}" stroke="${css('--bg')}" stroke-width="2"/>`;
+  const L=(sel!=null&&v2.find(r=>r.d===sel))||v2[v2.length-1];if(sel!=null&&L.d===sel)g+=`<line x1="${X(L.d)}" x2="${X(L.d)}" y1="${m.t}" y2="${m.t+h}" stroke="${css('--line')}" stroke-width="2"/>`;g+=`<circle cx="${X(L.d)}" cy="${Y(L.r)}" r="5" fill="${css('--fx')}" stroke="${css('--bg')}" stroke-width="2"/>`;
   g+=`<line class="hx" y1="${m.t}" y2="${m.t+h}" stroke="${css('--ink')}" visibility="hidden"/><rect class="hov" x="${m.l}" y="${m.t}" width="${w}" height="${h}" fill="transparent"/>`;
   svg.innerHTML=g;hover(svg,$('t2'),v2,X,x0,x1,m,w,W)}
 function refAt(arr,t){let lo=0,hi=arr.length-1,ans=null;while(lo<=hi){const m=(lo+hi)>>1;if(arr[m].d<=t){ans=arr[m];lo=m+1}else hi=m-1}return ans}
-function panel(view,A,B){const el=$('pie');if(!A||!B){el.innerHTML='<h3>Seçili aralık özeti</h3><div class="dt">Seçili aralıkta veri yok.</div>';return}
+function panel(view){const el=$('pie');const all=rows();const cl=v=>v>0?'up':v<0?'dn':'fl';
+  if(sel!=null){const i=all.findIndex(r=>r.d===sel);const r=all[i],p=i>0?all[i-1]:null;if(!r){sel=null;return panel(view)}
+    const dn=p?r.n-p.n:null,dr=(p&&p.r!=null&&r.r!=null)?r.r-p.r:null;
+    el.innerHTML=`<h3>${df.format(new Date(r.d))}</h3><div class="dt">Seçilen gün${p?' · önceki iş günü '+df.format(new Date(p.d)):''}</div>
+    <div class="pick"><b>Net fonlama</b><span class="${cl(r.n)}">${bn(r.n)}</span> <small>mr TL</small></div>
+    <table><tr><th></th><th>Değer</th><th>Önceki güne göre</th></tr>
+    <tr><td>Fonlama</td><td>${r.a!=null?bn(r.a):'—'}</td><td>${p&&p.a!=null&&r.a!=null?`<span class="${cl(r.a-p.a)}">${sg(r.a-p.a)}</span>`:'—'}</td></tr>
+    <tr><td>Sterilizasyon</td><td>${r.b!=null?bn(r.b):'—'}</td><td>${p&&p.b!=null&&r.b!=null?`<span class="${cl(r.b-p.b)}">${sg(r.b-p.b)}</span>`:'—'}</td></tr>
+    <tr><td><b>Net fonlama</b></td><td><b>${bn(r.n)}</b></td><td>${dn==null?'—':`<span class="${cl(dn)}">${sg(dn)}</span>`}</td></tr>
+    <tr><td>AOFM</td><td><b>${r.r!=null?pc(r.r):'—'}</b></td><td>${dr==null?'—':`<span class="${cl(dr)}">${(dr>0?'+':dr<0?'−':'')+rf.format(Math.abs(dr))} puan</span>`}</td></tr></table>
+    <p class="hint">mr TL. Net fonlama = fonlama − sterilizasyon. Aralık özetine dönmek için aynı güne tekrar tıklayın.</p>`;return}
+  const A=view[0],B=view[view.length-1];if(!A||!B){el.innerHTML='<h3>Seçili aralık özeti</h3><div class="dt">Seçili aralıkta veri yok.</div>';return}
   const avg=view.reduce((s,r)=>s+r.n,0)/view.length;const rs=view.filter(r=>r.r!=null);const rmin=Math.min(...rs.map(r=>r.r)),rmax=Math.max(...rs.map(r=>r.r));
-  const dn=B.n-A.n,dr=(B.r!=null&&A.r!=null)?B.r-A.r:null;const cl=v=>v>0?'up':v<0?'dn':'fl';
+  const dn=B.n-A.n,dr=(B.r!=null&&A.r!=null)?B.r-A.r:null;
   el.innerHTML=`<h3>Seçili aralık özeti</h3><div class="dt">${df.format(new Date(A.d))} → ${df.format(new Date(B.d))} · ${view.length} iş günü</div>
   <table><tr><th></th><th>Başlangıç</th><th>Son</th><th>Değişim</th></tr>
   <tr><td>Net fonlama (mr TL)</td><td>${bn(A.n)}</td><td><b>${bn(B.n)}</b></td><td class="${cl(dn)}">${sg(dn)}</td></tr>
   <tr><td>AOFM</td><td>${A.r!=null?pc(A.r):'—'}</td><td><b>${B.r!=null?pc(B.r):'—'}</b></td><td class="${dr==null?'fl':cl(dr)}">${dr==null?'—':(dr>0?'+':dr<0?'−':'')+rf.format(Math.abs(dr))+' puan'}</td></tr></table>
   <table style="margin-top:12px"><tr><td>Ortalama net fonlama</td><td><b>${bn(avg)}</b> mr TL</td></tr><tr><td>AOFM en düşük / en yüksek</td><td>${rs.length?pc(rmin)+' / '+pc(rmax):'—'}</td></tr></table>
-  <p class="hint">Net fonlama = fonlama − sterilizasyon (TCMB yayımlar). Pozitif: TCMB piyasaya net TL veriyor; negatif: piyasadan net TL çekiyor.</p>`}
+  <p class="hint">Bir güne tıklayarak o günün ayrıntılarını görebilirsiniz.</p>`}
 function render(){const all=rows();if(!all.length)return;const L=all[all.length-1];
   $('kN').firstChild.nodeValue=bn(L.n)+' ';$('kNd').textContent='Son veri: '+df.format(new Date(L.d));
   const lr=[...all].reverse().find(r=>r.r!=null);if(lr){$('kR').textContent=pc(lr.r);$('kRd').textContent='Son veri: '+df.format(new Date(lr.d))}
   const from=range.from??(L.d-365*864e5),to=range.to??L.d;const a0=refAt(all,from)||all.find(r=>r.d>=from);
-  const view=all.filter(r=>r.d>=(a0?a0.d:from)&&r.d<=to);cur=view;draw1(view);draw2(view);panel(view,view[0],view[view.length-1]);
+  const view=all.filter(r=>r.d>=(a0?a0.d:from)&&r.d<=to);cur=view;if(sel==null||!view.some(r=>r.d===sel))sel=view.length?view[view.length-1].d:null;draw1(view);draw2(view);panel(view);
   $('rng').textContent=view.length?`Grafik: ${df.format(new Date(view[0].d))} – ${df.format(new Date(view[view.length-1].d))} · ilk gün başlangıç (referans) günüdür · Kaynak: TCMB EVDS, ${Object.values(S).join(', ')}`:'Seçili aralıkta veri yok.'}
 const ro=new ResizeObserver(()=>{draw1(cur);draw2(cur)});ro.observe($('s1'));ro.observe($('s2'));
 function setPreset(y){preset=y;for(const b of document.querySelectorAll('#presets button'))b.setAttribute('aria-pressed',String(b.dataset.y===y));
