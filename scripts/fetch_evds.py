@@ -16,6 +16,10 @@ BASES = [
 ]
 KEY = os.environ.get("EVDS_API_KEY", "").strip()
 OUT = os.path.join(os.path.dirname(__file__), "..", "data", "rezerv.json")
+OUT_LIK = os.path.join(os.path.dirname(__file__), "..", "data", "likidite.json")
+# Likidite: TCMB net fonlaması ve AOFM (iş günü, milyon TL ve %)
+LIKIDITE = {"A": "TP.APIFON1.TOP", "B": "TP.APIFON2.TOP", "N": "TP.APIFON3", "R": "TP.APIFON4"}
+LIK_START = dt.date(2011, 1, 1)
 
 # Seri kodları (skill: onaylanmış formüller)
 WEEKLY = {"tot": "TP.AB.TOPLAM", "gold": "TP.AB.C1", "fx": "TP.AB.C2"}  # haftalık (Cuma), milyon $
@@ -109,6 +113,14 @@ def main():
     with open(OUT, "w", encoding="utf-8") as f:
         json.dump({"updated": dt.datetime.utcnow().isoformat() + "Z",
                    "series": {k: pairs(v) for k, v in data.items()}}, f, separators=(",", ":"))
+    lik = {k: series(code, LIK_START, today) for k, code in LIKIDITE.items()}
+    for k, v in lik.items():
+        if not v:
+            raise RuntimeError(f"likidite {k} boş geldi")
+        print(f"likidite {k}: {len(v)} gözlem, son {max(v)}")
+    with open(OUT_LIK, "w", encoding="utf-8") as f:
+        json.dump({"updated": dt.datetime.utcnow().isoformat() + "Z",
+                   "series": {k: pairs(v) for k, v in lik.items()}}, f, separators=(",", ":"))
 
 
 if __name__ == "__main__":

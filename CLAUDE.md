@@ -64,6 +64,15 @@ Site sol tarafta bir menüyle bölümlere ayrılır. Her bölüm bir sayfadır.
 - **Claude artifact sürümü (kullanıcı burada görmeyi tercih ediyor):** https://claude.ai/artifact/A7nL8d26HsA2VptJCKMDS5 (slug 49d4a565-13ab-48c7-a104-0f98a491fc3e). Sitedeki sayfanın aynısı; veriyi görüntüleyenin TCMB EVDS bağlantısından canlı çeker.
 - **Her değişiklikte iki yere yayınla:** `rezerv/index.html` düzenle → `python3 scripts/build_artifact.py` (artifact/rezerv.html üretir; veri yükleyici `scripts/artifact_loader.js`, /*LOADER-START*/…/*LOADER-END*/ bloğunun yerine geçer) → artifact'i publish_files ile güncelle (as: index.html) → commit + push (GitHub sitesi).
 
+### Artifact'ler (sayfa başına bir tane; menü bağlantıları birbirine gider)
+- Rezerv: https://claude.ai/artifact/A7nL8d26HsA2VptJCKMDS5 (slug 49d4a565-13ab-48c7-a104-0f98a491fc3e)
+- Likidite: https://claude.ai/artifact/JMkyzuvXxi3eBdbDdC3nE6 (slug 8c915683-5b5f-4dee-ae3a-4a0a19e90ccb)
+- `scripts/build_artifact.py` PAGES listesindeki her sayfa için artifact/<sayfa>.html üretir. Yeni sayfa: PAGES'e ekle, yeni artifact oluştur, mcp yeteneğini declare_capabilities ile tanımla.
+
+### Likidite bölümü — taslak (kullanıcı ayrıntıları henüz belirtmedi)
+- Seriler (bie_apifon, iş günü, milyon TL / %): TP.APIFON1.TOP (fonlama), TP.APIFON2.TOP (sterilizasyon), TP.APIFON3 (net fonlama = A−B, TCMB yayımlar), TP.APIFON4 (AOFM). 2011'den beri.
+- İlk öneri: üstte net fonlama ve AOFM kutuları; aynı tarih kontrolleri (1W…Tümü, varsayılan YTD); grafik 1: fonlama (+, mavi) ve sterilizasyon (−, altın) çubukları + net fonlama kırmızı çizgi; grafik 2: AOFM basamaklı çizgi; sağda seçili aralık özeti (başlangıç/son/değişim, ortalama net fonlama, AOFM min/max).
+
 ### Rezerv bölümü — sayfa özellikleri
 - **Brüt / Net** düğmeleriyle iki görünüm. Üstte yalnızca son değer ve tarih; değişim pencereleri (1W/1M/YTD/1Y kutuları) ve alt bölümler kullanıcı isteğiyle kaldırıldı.
 - Tarih: başlangıç/bitiş seçimi + kısayollar 1W · 1M · YTD · 1Y · 3Y · 5Y · 10Y · Tümü. Varsayılan YTD. Grafiğin ilk çubuğu her zaman referans (başlangıç) haftasıdır; panel ile grafik aynı tarihleri kullanır.

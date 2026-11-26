@@ -1,7 +1,8 @@
 {
   // Sitenin sol menüsü. Yeni bölüm eklemek için SECTIONS listesine bir satır ekle.
   const SECTIONS = [
-    { id: 'rezerv', title: 'Rezerv', href: '../rezerv/' }
+    { id: 'rezerv', title: 'Rezerv', href: '../rezerv/' },
+    { id: 'likidite', title: 'Likidite', href: '../likidite/' }
   ];
   const SOON = ['Fiyatlar', 'Döviz', 'Parasal', 'Dış istatistikler'];
   const here = location.pathname.split('/').filter(Boolean);
