@@ -127,11 +127,9 @@ input[type=month]{font:16px Archivo,sans-serif;padding:8px 10px;border:1px solid
       <button data-y="ytd">YTD</button><button data-y="1">1Y</button><button data-y="3">3Y</button><button data-y="5">5Y</button><button data-y="10">10Y</button><button data-y="all">Tümü</button>
     </div>
   </div>
-  <h2 class="ch" id="h1">Karşılıksız çek adedi</h2>
-  <div class="fig" id="f1"><svg id="s1" role="img" aria-label="Aylık karşılıksız çek"></svg><div class="tip" id="t1"></div></div>
-  <h2 class="ch" id="h2" style="margin-top:28px">Karşılıksız çek adedinin toplam ibraz edilen çek adedine oranı</h2>
-  <p class="math" id="fx" style="margin:2px 0 6px"></p>
-  <div class="fig" id="f2" style="min-height:260px"><svg id="s2" role="img" aria-label="Karşılıksız çek oranı, yüzde"></svg><div class="tip" id="t2"></div></div>
+  <h2 class="ch" id="h1">Karşılıksız çek adedi ve oranı</h2>
+  <div class="legend"><span><i style="background:var(--red);height:3px;vertical-align:3px"></i><span id="lg1">Karşılıksız çek adedi (sol eksen)</span></span><span><i style="background:var(--fx);height:3px;vertical-align:3px"></i><span id="lg2">Karşılıksız oranı, % (sağ eksen)</span></span></div>
+  <div class="fig" id="f1" style="min-height:420px"><svg id="s1" role="img" aria-label="Aylık karşılıksız çek"></svg><div class="tip" id="t1"></div></div>
   <div class="rng" id="rng"></div>
   <p class="status" id="status"></p>
 </section>
@@ -204,9 +202,23 @@ function lineChart(id,tipId,view,val,fmtTick,color){const svg=$(id);const {W,H,n
   hov.addEventListener('mousemove',e=>{const p=e.clientX-svg.getBoundingClientRect().left;let b=v2[0],bd=1e9;for(const q of v2){const dd=Math.abs(X(q.d)-p);if(dd<bd){bd=dd;b=q}}const bx=X(b.d);
     hx.setAttribute('x1',bx);hx.setAttribute('x2',bx);hx.setAttribute('visibility','visible');tip.innerHTML=tipHTML(b);tip.style.display='block';const tw=tip.offsetWidth;tip.style.left=(bx+12+tw>W?Math.max(bx-tw-12,0):bx+12)+'px';tip.style.top='12px'});
   hov.addEventListener('mouseleave',()=>{tip.style.display='none';hx.setAttribute('visibility','hidden')})}
-function draw(view){
-  lineChart('s1','t1',view,kv,v=>mode==='adet'?af.format(v):tf.format(v/1e6).replace(/,00$/,''),css('--red'));
-  lineChart('s2','t2',view,rv,v=>'%'+(Math.round(v*100)/100).toLocaleString('tr-TR'),css('--fx'))}
+function draw(view){const svg=$('s1');const {W,H,narrow}=frame(svg);if(!W||!H)return;const m={l:narrow?48:64,r:narrow?44:58,t:12,b:28};
+  const va=view.filter(r=>kv(r)!=null),vb=view.filter(r=>rv(r)!=null);if(!va.length){svg.innerHTML='';return}
+  const w=W-m.l-m.r,h=H-m.t-m.b;const {X}=xscale(view,w,m.l);
+  const rng=(arr,f)=>{let lo=Math.min(...arr.map(f)),hi=Math.max(...arr.map(f));const pad=(hi-lo)*.12||Math.abs(hi)*.1||1;return [Math.max(0,lo-pad),hi+pad]};
+  const [lo1,hi1]=rng(va,kv),[lo2,hi2]=vb.length?rng(vb,rv):[0,1];
+  const Y1=v=>m.t+(hi1-v)/(hi1-lo1)*h,Y2=v=>m.t+(hi2-v)/(hi2-lo2)*h;const n=narrow?4:5;let g='';
+  const st1=niceStep(hi1-lo1,n);for(let v=Math.ceil(lo1/st1)*st1;v<=hi1;v+=st1)g+=`<line x1="${m.l}" x2="${m.l+w}" y1="${Y1(v)}" y2="${Y1(v)}" stroke="${css('--line')}"/><text x="${m.l-6}" y="${Y1(v)+4}" text-anchor="end" font-size="12" fill="${css('--red')}">${mode==='adet'?af.format(v):tf.format(v/1e6).replace(/,00$/,'')}</text>`;
+  const st2=niceStep(hi2-lo2,n);for(let v=Math.ceil(lo2/st2)*st2;v<=hi2;v+=st2)g+=`<text x="${m.l+w+6}" y="${Y2(v)+4}" text-anchor="start" font-size="12" fill="${css('--fx')}">%${(Math.round(v*100)/100).toLocaleString('tr-TR')}</text>`;
+  g+=axisX(view,X,H,narrow);const c1=css('--red'),c2=css('--fx');
+  if(vb.length)g+=`<path d="M${vb.map(r=>X(r.d)+','+Y2(rv(r))).join('L')}" fill="none" stroke="${c2}" stroke-width="2" stroke-dasharray="6 4" stroke-linejoin="round"/>`;
+  g+=`<path d="M${va.map(r=>X(r.d)+','+Y1(kv(r))).join('L')}" fill="none" stroke="${c1}" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>`;
+  if(va.length<=60)for(const r of va)g+=`<circle cx="${X(r.d)}" cy="${Y1(kv(r))}" r="3" fill="${c1}"/>`;
+  g+=`<line class="hx" y1="${m.t}" y2="${m.t+h}" stroke="${css('--ink')}" visibility="hidden"/><rect class="hov" x="${m.l}" y="${m.t}" width="${w}" height="${h}" fill="transparent"/>`;
+  svg.innerHTML=g;const tip=$('t1'),hov=svg.querySelector('.hov'),hx=svg.querySelector('.hx');
+  hov.addEventListener('mousemove',e=>{const p=e.clientX-svg.getBoundingClientRect().left;let b=va[0],bd=1e9;for(const q of va){const dd=Math.abs(X(q.d)-p);if(dd<bd){bd=dd;b=q}}const bx=X(b.d);
+    hx.setAttribute('x1',bx);hx.setAttribute('x2',bx);hx.setAttribute('visibility','visible');tip.innerHTML=tipHTML(b);tip.style.display='block';const tw=tip.offsetWidth;tip.style.left=(bx+12+tw>W?Math.max(bx-tw-12,0):bx+12)+'px';tip.style.top='12px'});
+  hov.addEventListener('mouseleave',()=>{tip.style.display='none';hx.setAttribute('visibility','hidden')})}
 function refAt(arr,t){let lo=0,hi=arr.length-1,ans=null;while(lo<=hi){const m=(lo+hi)>>1;if(arr[m].d<=t){ans=arr[m];lo=m+1}else hi=m-1}return ans}
 function render(){const all=rows();if(!all.length)return;const L=all[all.length-1];const lm=mf.format(new Date(L.d));
   const A=mode==='adet';
@@ -214,12 +226,10 @@ function render(){const all=rows();if(!all.length)return;const L=all[all.length-
   $('l2').textContent='Toplam ibraz edilen çek '+(A?'adedi':'tutarı');$('k2').innerHTML='';$('k2').append(fmtV(tv(L))+' ');const s2=document.createElement('small');s2.textContent=unit();$('k2').append(s2);
   $('l3').textContent='Karşılıksız oranı ('+(A?'adet':'tutar')+')';$('k3').textContent=rv(L)!=null?'%'+rf.format(rv(L)):'—';
   for(const k of ['d1','d2','d3'])$(k).textContent='Son veri: '+lm;
-  $('h1').textContent='Karşılıksız çek '+(A?'adedi':'tutarı (milyar TL)');
-  $('h2').textContent='Karşılıksız çek '+(A?'adedinin toplam ibraz edilen çek adedine':'tutarının toplam ibraz edilen çek tutarına')+' oranı';
-  $('fx').innerHTML=`Oran (%) = <span class="frac"><span>Karşılıksız çek ${A?'adedi':'tutarı'}</span><span>Toplam ibraz edilen çek ${A?'adedi':'tutarı'}</span></span> × 100`;
+  $('h1').textContent='Karşılıksız çek '+(A?'adedi':'tutarı')+' ve oranı';$('lg1').textContent='Karşılıksız çek '+(A?'adedi':'tutarı, milyar TL')+' (sol eksen)';$('lg2').textContent='Karşılıksız oranı, % (sağ eksen)';
   const from=range.from??(L.d-3*365*864e5),to=range.to??L.d;const view=all.filter(r=>r.d>=from&&r.d<=to);cur=view;draw(view);
   $('rng').textContent=view.length?'Kaynak: EVDS':'Seçili aralıkta veri yok.'}
-const ro=new ResizeObserver(()=>draw(cur));ro.observe($('s1'));ro.observe($('s2'));
+const ro=new ResizeObserver(()=>draw(cur));ro.observe($('s1'));
 for(const b of document.querySelectorAll('#mode button'))b.addEventListener('click',()=>{mode=b.dataset.m;for(const x of document.querySelectorAll('#mode button'))x.setAttribute('aria-pressed',String(x===b));render()});
 function setPreset(y){preset=y;for(const b of document.querySelectorAll('#presets button'))b.setAttribute('aria-pressed',String(b.dataset.y===y));
   const all=rows();const end=all.length?all[all.length-1].d:today.getTime();const d=new Date(end);
