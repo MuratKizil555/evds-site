@@ -100,6 +100,7 @@ th{font-weight:500;color:var(--mut);font-size:13px}
 .pick{margin:6px 0 12px}.pick b{display:block;font-size:13px;font-weight:500;color:var(--mut)}.pick span{font-size:30px;font-weight:800;font-stretch:112%}
 .hov{cursor:default}
 .ghost{font:600 15px Archivo,sans-serif;min-height:44px;padding:0 18px;border:1px solid var(--ink);background:var(--bg);color:var(--ink);border-radius:6px;cursor:pointer;margin-top:18px}.ghost[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+.pct{font-size:18px;font-weight:600;margin-top:2px}.big.dn{color:var(--red)}.big.up{color:var(--up)}
 .note2{font-size:13px;color:var(--mut);margin:6px 0 0}
 </style>
 </head>
@@ -110,7 +111,7 @@ th{font-weight:500;color:var(--mut);font-size:13px}
   <p class="sub">USD/TRY · TCMB döviz alış kuru · iş günü</p>
   <div class="tiles">
     <div class="tile"><b>USD/TRY</b><div class="big" id="k1">—</div><div class="date" id="d1"></div></div>
-    <div class="tile"><b>Günlük değişimin yıllıklandırılmış hızı</b><div class="big" id="k2">—</div><div class="date" id="d2"></div></div>
+    <div class="tile"><b>Önceki iş gününe göre değişim</b><div class="big" id="k2">—</div><div class="pct" id="k2p"></div><div class="date" id="d2"></div></div>
   </div>
 </header>
 <section class="band lk" style="padding-top:8px">
@@ -123,9 +124,9 @@ th{font-weight:500;color:var(--mut);font-size:13px}
   </div>
   <h2 class="ch">USD/TRY</h2>
   <div class="fig" id="f1" style="min-height:360px"><svg id="s1" role="img" aria-label="Günlük USD/TRY kuru"></svg><div class="tip" id="t1"></div></div>
-  <button class="ghost" id="tg" aria-pressed="false">Yıllıklandırılmış günlük değişimi göster</button>
+  <button class="ghost" id="tg" aria-pressed="false">Yıllıklandırılmış değişimi göster</button>
   <div id="w2" hidden>
-    <h2 class="ch" style="margin-top:22px">Günlük kur değişiminin ima ettiği yıllık artış hızı (%)</h2>
+    <h2 class="ch" style="margin-top:22px">Günlük kur değişiminin yıllıklandırılmış hali (%)</h2>
     <div class="fig" id="f2" style="min-height:300px"><svg id="s2" role="img" aria-label="Günlük kur değişiminin yıllıklandırılmış hızı"></svg><div class="tip" id="t2"></div></div>
     <p class="note2" id="clip"></p>
   </div>
@@ -173,9 +174,12 @@ const iso=d=>new Date(d).toISOString().slice(0,10);
 const today=new Date();today.setUTCHours(0,0,0,0);
 let range={from:null,to:null},preset='ytd',cur=[],show2=false;
 function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim()}
-// Yıllıklandırılmış günlük değişim (bileşik, takvim günü): ((K_t / K_önceki)^(365 / gün farkı) − 1) × 100
-function rows(){const ds=[...data.usd.keys()].sort((a,b)=>a-b);const out=[];let p=null;for(const d of ds){const k=data.usd.get(d);let a=null;if(p){const g=(d-p.d)/864e5;if(g>0)a=(Math.pow(k/p.k,365/g)-1)*100}out.push({d,k,a});p={d,k}}return out}
+// Günlük değişim (%) = (K_t / K_önceki − 1) × 100; bps = % × 100
+// Yıllıklandırılmış değişim (%) = günlük değişim (%) × 365 / iki gözlem arasındaki takvim günü (basit, bileşiksiz)
+function rows(){const ds=[...data.usd.keys()].sort((a,b)=>a-b);const out=[];let p=null;for(const d of ds){const k=data.usd.get(d);let c=null,a=null;if(p){const g=(d-p.d)/864e5;c=(k/p.k-1)*100;if(g>0)a=c*365/g}out.push({d,k,c,a,pd:p?p.d:null});p={d,k}}return out}
 const sa=v=>(v>0?'+':v<0?'−':'')+'%'+pf.format(Math.abs(v));
+const p2=new Intl.NumberFormat('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const sb=v=>(v>0?'+':v<0?'−':'')+(Math.round(Math.abs(v)*100)||0).toLocaleString('tr-TR')+' bps', sc=v=>(v>0?'+':v<0?'−':'')+'%'+p2.format(Math.abs(v));
 function niceStep(max,n){const raw=max/n,p=10**Math.floor(Math.log10(raw)),f=raw/p;return (f<1.5?1:f<3?2:f<7?5:10)*p}
 
 function axisX(view,X,H,narrow){if(!view.length)return '';const spanY=(view[view.length-1].d-view[0].d)/(365*864e5);let g='',last=null,lastX=-1e9;const minGap=narrow?48:64;
@@ -190,7 +194,7 @@ function xscale(view,w,ml){const n=Math.max(view.length,22);const idx=new Map(vi
 function refAt(arr,t){let lo=0,hi=arr.length-1,ans=null;while(lo<=hi){const m=(lo+hi)>>1;if(arr[m].d<=t){ans=arr[m];lo=m+1}else hi=m-1}return ans}
 
 
-function tipHTML(r){return `<b>${df.format(new Date(r.d))}</b><br>USD/TRY: <b>${kf.format(r.k)}</b>`+(r.a!=null?`<br>Yıllıklandırılmış günlük değişim: <b>${sa(r.a)}</b>`:'')}
+function tipHTML(r){return `<b>${df.format(new Date(r.d))}</b><br>USD/TRY: <b>${kf.format(r.k)}</b>`+(r.c!=null?`<br>Önceki güne göre: <b>${sb(r.c)}</b> (${sc(r.c)})`:'')+(r.a!=null?`<br>Yıllıklandırılmış: <b>${sa(r.a)}</b>`:'')}
 function hover(svg,tipId,view,X,W){const tip=$(tipId),hov=svg.querySelector('.hov'),hx=svg.querySelector('.hx');
   hov.addEventListener('mousemove',e=>{const p=e.clientX-svg.getBoundingClientRect().left;let b=view[0],bd=1e9;for(const q of view){const dd=Math.abs(X(q.d)-p);if(dd<bd){bd=dd;b=q}}const bx=X(b.d);
     hx.setAttribute('x1',bx);hx.setAttribute('x2',bx);hx.setAttribute('visibility','visible');tip.innerHTML=tipHTML(b);tip.style.display='block';const tw=tip.offsetWidth;tip.style.left=(bx+12+tw>W?Math.max(bx-tw-12,0):bx+12)+'px';tip.style.top='12px'});
@@ -210,22 +214,22 @@ function draw2(view){const svg=$('s2');const {W,H,narrow,m}=frame(svg);if(!W||!H
   // Tek günlük sıçramalar ekseni bozmasın diye eksen %1–%99 dilimiyle sınırlanır; dışarıda kalan çubuklar kesilir, değeri tooltip'te görünür
   const srt=v.map(r=>r.a).sort((a,b)=>a-b);const q=p=>srt[Math.min(srt.length-1,Math.max(0,Math.round(p*(srt.length-1))))];
   let lo=Math.min(0,v.length>50?q(.01):srt[0]),hi=Math.max(0,v.length>50?q(.99):srt[srt.length-1]);const sp=(hi-lo)||1;hi+=sp*.06;lo-=sp*.06;
-  const clip=v.filter(r=>r.a>hi||r.a<lo).length;$('clip').textContent=clip?`${clip} günün değeri eksen sınırının dışında kaldığı için çubuğu kesik gösteriliyor; değerin tamamı fareyle üzerine gelince görünür.`:'';
+  const clip=v.filter(r=>r.a>hi||r.a<lo).length;$('clip').textContent=clip?`${clip} günün değeri eksen sınırının dışında kaldığı için grafikte eksen sınırında kesik gösteriliyor; değerin tamamı fareyle üzerine gelince görünür.`:'';
   const Y=x=>m.t+(hi-Math.max(lo,Math.min(hi,x)))/(hi-lo)*h;const st=niceStep(hi-lo,narrow?4:5);let g='';
   for(let x=Math.ceil(lo/st)*st;x<=hi;x+=st)g+=`<line x1="${m.l}" x2="${m.l+w}" y1="${Y(x)}" y2="${Y(x)}" stroke="${css('--line')}"/><text x="${m.l-6}" y="${Y(x)+4}" text-anchor="end" font-size="12" fill="${css('--mut')}">%${(Math.round(x)||0).toLocaleString('tr-TR')}</text>`;
-  g+=axisX(view,X,H,narrow);const pc=css('--red'),nc=css('--fx');
-  for(const r of v){const y1=Y(Math.max(0,r.a)),y2=Y(Math.min(0,r.a));g+=`<rect x="${X(r.d)-bw/2}" y="${y1}" width="${bw}" height="${Math.max(.5,y2-y1)}" fill="${r.a>0?pc:nc}"/>`}
+  g+=axisX(view,X,H,narrow);
+  g+=`<path d="M${v.map(r=>X(r.d)+','+Y(r.a)).join('L')}" fill="none" stroke="${css('--red')}" stroke-width="1.8" stroke-linejoin="round"/>`;
   g+=`<line x1="${m.l}" x2="${m.l+w}" y1="${Y(0)}" y2="${Y(0)}" stroke="${css('--ink')}" stroke-width="1.5"/>`;
   g+=`<line class="hx" y1="${m.t}" y2="${m.t+h}" stroke="${css('--ink')}" visibility="hidden"/><rect class="hov" x="${m.l}" y="${m.t}" width="${w}" height="${h}" fill="transparent"/>`;
   svg.innerHTML=g;hover(svg,'t2',v,X,W)}
 function render(){const all=rows();if(!all.length)return;const L=all[all.length-1];
   $('k1').textContent=kf.format(L.k);$('d1').textContent='Son veri: '+df.format(new Date(L.d));
-  $('k2').textContent=L.a!=null?sa(L.a):'—';$('d2').textContent=L.a!=null?'Son veri: '+df.format(new Date(L.d))+' · bir önceki iş gününe göre':'';
+  $('k2').textContent=L.c!=null?sb(L.c):'—';$('k2').className='big '+(L.c>0?'dn':L.c<0?'up':'');$('k2p').textContent=L.c!=null?sc(L.c)+' · yıllıklandırılmış '+sa(L.a):'';$('d2').textContent=L.pd!=null?df.format(new Date(L.pd))+' → '+df.format(new Date(L.d)):'';
   const from=range.from??(L.d-365*864e5),to=range.to??L.d;const a0=refAt(all,from)||all.find(r=>r.d>=from);
   const view=all.filter(r=>r.d>=(a0?a0.d:from)&&r.d<=to);cur=view;draw1(view);if(show2)draw2(view);
   $('rng').textContent=view.length?'Kaynak: EVDS':'Seçili aralıkta veri yok.'}
 const ro=new ResizeObserver(()=>{draw1(cur);if(show2)draw2(cur)});ro.observe($('s1'));ro.observe($('s2'));
-$('tg').addEventListener('click',()=>{show2=!show2;$('w2').hidden=!show2;$('tg').setAttribute('aria-pressed',String(show2));$('tg').textContent=show2?'Yıllıklandırılmış günlük değişimi gizle':'Yıllıklandırılmış günlük değişimi göster';if(show2)requestAnimationFrame(()=>draw2(cur))});
+$('tg').addEventListener('click',()=>{show2=!show2;$('w2').hidden=!show2;$('tg').setAttribute('aria-pressed',String(show2));$('tg').textContent=show2?'Yıllıklandırılmış değişimi gizle':'Yıllıklandırılmış değişimi göster';if(show2)requestAnimationFrame(()=>draw2(cur))});
 function setPreset(y){preset=y;for(const b of document.querySelectorAll('#presets button'))b.setAttribute('aria-pressed',String(b.dataset.y===y));
   const all=rows();const end=all.length?all[all.length-1].d:today.getTime();const d=new Date(end);
   if(y==='all')d.setTime(MIN);else if(y==='ytd')d.setTime(Date.UTC(d.getUTCFullYear(),0,1));else if(y==='w')d.setUTCDate(d.getUTCDate()-7);else if(y==='m')d.setUTCMonth(d.getUTCMonth()-1);else d.setUTCFullYear(d.getUTCFullYear()-(+y));
