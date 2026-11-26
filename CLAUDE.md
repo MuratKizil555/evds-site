@@ -112,3 +112,5 @@ Site sol tarafta bir menüyle bölümlere ayrılır. Her bölüm bir sayfadır.
 ### Açık konular
 - Basındaki net rezerv rakamları bizimkinden ~4,8 milyar $ yüksek (yöntem yayımlanmamış). Hakan Kara ve "507" hesaplarının yöntemi araştırılacak; kullanıcı onaylamadan formül değiştirilmez.
 - Bu aşamada sayfada veri yorumu yapılmaz, yalnızca görselleştirilir.
+- **Kur – yıllıklandırılmış değişim grafiği:** kullanıcı günlük yıllıklandırmanın doğru olmadığını, grafiğin daha pürüzsüz olması gerektiğini düşünüyor. Bir sonraki oturumda ele alınacak (seçenekler: hareketli ortalama, haftalık/aylık pencere üzerinden yıllıklandırma, 252 iş günü). Yöntem kullanıcıyla netleşmeden değiştirilmez.
+- Altın ve Kur formülleri (Claude önerisi) henüz açıkça onaylanmadı.
