@@ -28,6 +28,7 @@ OUT_ALTIN = os.path.join(os.path.dirname(__file__), "..", "data", "altin.json")
 # Altın ithalatı (BİST, aylık kg). Ons fiyatı ve USD/TL kuru günlük verinin aylık ortalaması.
 ALTIN_KG = "TP.GOLDIMPRT.V1"
 ALTIN_START = dt.date(1995, 7, 1)
+OUT_KUR = os.path.join(os.path.dirname(__file__), "..", "data", "kur.json")
 
 
 def monthly_avg(daily):
@@ -158,6 +159,11 @@ def main():
     with open(OUT_ALTIN, "w", encoding="utf-8") as f:
         json.dump({"updated": dt.datetime.utcnow().isoformat() + "Z",
                    "series": {k: pairs(v) for k, v in altin.items()}}, f, separators=(",", ":"))
+    # Kur: USD/TRY günlük (TCMB döviz alış); yıllıklandırma sayfada hesaplanır
+    with open(OUT_KUR, "w", encoding="utf-8") as f:
+        json.dump({"updated": dt.datetime.utcnow().isoformat() + "Z",
+                   "series": {"usd": pairs(raw_daily["usd"])}}, f, separators=(",", ":"))
+    print(f"kur usd: {len(raw_daily['usd'])} gözlem, son {max(raw_daily['usd'])}")
 
 
 if __name__ == "__main__":

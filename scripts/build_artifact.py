@@ -14,6 +14,7 @@ PAGES = {
     "likidite": ("artifact_loader_likidite.js", "https://claude.ai/artifact/JMkyzuvXxi3eBdbDdC3nE6"),
     "cek": ("artifact_loader_cek.js", "https://claude.ai/artifact/LGLoTiPtShNDNXLzqTAq2y"),
     "altin": ("artifact_loader_altin.js", "https://claude.ai/artifact/QZK3PkxNXgnW3XNqkqoKqS"),
+    "kur": ("artifact_loader_kur.js", "https://claude.ai/artifact/1fnytfkzMBygSbW9XF5Teq"),
 }
 nav_src = open(os.path.join(ROOT, "assets", "nav.js"), encoding="utf-8").read()
 os.makedirs(os.path.join(ROOT, "artifact"), exist_ok=True)

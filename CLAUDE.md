@@ -69,6 +69,7 @@ Site sol tarafta bir menüyle bölümlere ayrılır. Her bölüm bir sayfadır.
 - Likidite: https://claude.ai/artifact/JMkyzuvXxi3eBdbDdC3nE6 (slug 8c915683-5b5f-4dee-ae3a-4a0a19e90ccb)
 - Çek: https://claude.ai/artifact/LGLoTiPtShNDNXLzqTAq2y (slug 9c01fe71-58df-460e-b42f-76b80570c7fa)
 - Altın: https://claude.ai/artifact/QZK3PkxNXgnW3XNqkqoKqS (slug bec51bae-a7ea-40dc-8755-88921ff0e611)
+- Kur: https://claude.ai/artifact/1fnytfkzMBygSbW9XF5Teq (slug 056a9998-6a00-4908-b34c-29a9e42e70fa)
 - `scripts/build_artifact.py` PAGES listesindeki her sayfa için artifact/<sayfa>.html üretir. Yeni sayfa: PAGES'e ekle, yeni artifact oluştur, mcp yeteneğini declare_capabilities ile tanımla.
 
 ### Likidite bölümü — sayfa özellikleri
@@ -87,6 +88,13 @@ Site sol tarafta bir menüyle bölümlere ayrılır. Her bölüm bir sayfadır.
 - Seri: TP.GOLDIMPRT.V1 (BİST altın ithalatı, kg, aylık, Temmuz 1995'ten). Fiyat: TP.ALTINPIYASA.KAP03 (BİST USD/ons, Temmuz 2018'den), kur: TP.DK.USD.A.YTL; ikisi de aylık ortalama (site: günlük verinin aylık ortalaması; artifact: EVDS frequency 5 + avg).
 - Formül (Claude önerisi, kullanıcı onayı bekliyor): USD karşılığı = kg × 32,1507466 × ons fiyatı; TL karşılığı = USD karşılığı × USD/TL. 2018-07 öncesi karşılıklar boş.
 - Üstte üç kutu: son ay ithalat (kg), USD karşılığı (milyon $), TL karşılığı (milyar TL). Grafik: aylık kg çubukları (altın rengi). Altında tablo: ay, kg, ons, ons fiyatı, USD karşılığı, USD/TL, TL karşılığı. Tablo tek satır: varsayılan seçili tarih aralığının toplamı (kg, USD ve TL toplamı; ons miktarı sütunu yok; ons fiyatı = ΣUSD÷Σons, kur = ΣTL÷ΣUSD, ithalat ağırlıklı). Her ay kendi ayının aylık ortalama fiyatı ve kuruyla hesaplanıp toplanır. Grafikte bir aya tıklanınca tablo o ayı gösterir (çubuk çerçevelenir, diğerleri soluklaşmaz); aynı aya ikinci tıklama aralık toplamına döner.
+
+### Kur bölümü — sayfa özellikleri
+- Seri: TP.DK.USD.A.YTL (USD/TRY, TCMB döviz alış, günlük; sitede 1987'den). Üstte iki kutu: son kur ve son günün yıllıklandırılmış değişimi.
+- Grafik 1: USD/TRY çizgi (iş günü ekseni). Düğme ("Yıllıklandırılmış günlük değişimi göster") ile açılan ayrı grafik 2: her günün yıllıklandırılmış değişimi, çubuk (artış kırmızı, düşüş lacivert), sıfır çizgisi.
+- Formül (Claude önerisi, kullanıcı onayı bekliyor): bileşik, takvim günü: ((K_t / K_önceki)^(365 / gün farkı) − 1) × 100. Pazartesi değişimi 3 güne bölünür.
+- Eksen %1–%99 dilimiyle sınırlanır; dışarıda kalan çubuklar kesik, değer tooltip'te; altında kaç günün kesildiği yazar.
+- Tarih kontrolleri: 1W…Tümü, varsayılan YTD. "Kaynak: EVDS".
 
 ### Rezerv bölümü — sayfa özellikleri
 - **Brüt / Net** düğmeleriyle iki görünüm. Üstte yalnızca son değer ve tarih; değişim pencereleri (1W/1M/YTD/1Y kutuları) ve alt bölümler kullanıcı isteğiyle kaldırıldı.

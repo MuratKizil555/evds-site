@@ -4,9 +4,10 @@
     { id: 'rezerv', title: 'Rezerv', href: '../rezerv/' },
     { id: 'likidite', title: 'Likidite', href: '../likidite/' },
     { id: 'cek', title: 'Çek', href: '../cek/' },
-    { id: 'altin', title: 'Altın', href: '../altin/' }
+    { id: 'altin', title: 'Altın', href: '../altin/' },
+    { id: 'kur', title: 'Kur', href: '../kur/' }
   ];
-  const SOON = ['Fiyatlar', 'Döviz', 'Parasal', 'Dış istatistikler'];
+  const SOON = ['Fiyatlar', 'Parasal', 'Dış istatistikler'];
   const here = location.pathname.split('/').filter(Boolean);
   const nav = document.getElementById('nav');
   if (nav) {

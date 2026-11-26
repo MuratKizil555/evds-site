@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kur · EVDS Pano</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: sakin, kesin; bir gazetenin ekonomi grafik masası (Rezerv sayfasıyla aynı dil)
+   IDEA: İsviçre tarifesi — sol kenara asılı büyük rakamlar, kalın üst çizgi
+   PICTURE: altın + döviz yığılmış alan grafiği, toplam çizgisi, hover ile haftalık değer
+   COLOUR and TYPE: beyaz zemin, siyah mürekkep, altın için okra, düşüşte sinyal kırmızısı; Archivo
+   LAYOUT: başlık + toplam, değişim şeridi, grafik, altında kırılım kartları ve tablo */
+:root{color-scheme:light dark;--bg:light-dark(#fff,#0e0e0e);--ink:light-dark(#111,#f0efec);--mut:light-dark(#6b6a66,#a3a29b);--line:light-dark(#e3e2dc,#2a2a28);--soft:light-dark(#f5f4ef,#181817);--red:light-dark(#d4002a,#ff5a6e);--up:light-dark(#0a7d3b,#3ccf7a);--gold:light-dark(#c3921b,#d9a93a);--fx:light-dark(#173a73,#4f7fd1)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Archivo,system-ui,sans-serif;overflow-x:clip;font-variant-numeric:tabular-nums}
+.band{padding:clamp(22px,4vw,48px) max(4vw,16px);max-width:1240px;margin:0}
+.shell{display:grid;grid-template-columns:220px minmax(0,1fr);min-height:100vh}
+.nav{background:var(--ink);color:var(--bg);padding:24px 16px;position:sticky;top:0;height:100vh;overflow:auto}
+.nav .brand{font-weight:800;font-stretch:112%;font-size:22px;line-height:1.1;margin:0 0 4px}
+.nav .tag{font-size:12px;opacity:.7;margin:0 0 22px}
+.nav a{display:block;color:var(--bg);text-decoration:none;padding:10px 12px;border-radius:6px;font-weight:500;min-height:44px;opacity:.85}
+.nav a:hover{opacity:1;background:color-mix(in srgb,var(--bg) 12%,transparent)}
+.nav a[aria-current=page]{opacity:1;background:var(--bg);color:var(--ink)}
+.nav .soon{display:block;padding:10px 12px;font-size:14px;opacity:.45}
+@media(max-width:860px){.shell{grid-template-columns:1fr}.nav{position:static;height:auto;display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:12px 16px}.nav .tag,.nav .soon{display:none}.nav .brand{margin:0 12px 0 0;font-size:18px}}
+.band{max-width:1240px}
+
+header.band{padding-bottom:12px}
+h1{font-size:clamp(30px,4.4vw,46px);line-height:1.05;margin:0 0 6px;font-weight:800;font-stretch:112%;text-wrap:balance}
+.sub{color:var(--mut);margin:0;font-size:15px}
+.hero{display:grid;grid-template-columns:minmax(0,1fr);gap:24px;align-items:end;margin-top:22px}
+.big{font-size:clamp(44px,7vw,76px);font-weight:800;font-stretch:112%;line-height:1}
+.big small{font-size:.38em;font-weight:500;color:var(--mut);margin-left:6px}
+.date{font-size:14px;color:var(--mut);margin-top:6px}
+.chips{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:2px solid var(--ink)}
+.chip{padding:10px 10px 4px 0}
+.chip b{display:block;font-size:13px;font-weight:500;color:var(--mut)}
+.chip .v{font-size:20px;font-weight:700;white-space:nowrap}
+.chip .p{font-size:13px;white-space:nowrap}
+.up{color:var(--up)}.dn{color:var(--red)}.fl{color:var(--mut)}
+.ctrl{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:end;padding-top:6px;padding-bottom:6px}
+.ctrl label{display:flex;flex-direction:column;font-size:13px;color:var(--mut);gap:4px}
+input[type=date]{font:16px Archivo,sans-serif;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);min-height:44px}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+.presets button{font:500 14px Archivo,sans-serif;min-height:44px;padding:0 14px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:6px;cursor:pointer}
+.presets button[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.mode{display:flex;gap:6px;margin-top:14px}.mode button{font:600 15px Archivo,sans-serif;min-height:44px;padding:0 18px;border:1px solid var(--ink);background:var(--bg);color:var(--ink);border-radius:6px;cursor:pointer}.mode button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+.legend{display:flex;gap:18px;font-size:13px;color:var(--mut);margin:4px 0 8px;flex-wrap:wrap}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.fig{position:relative;min-height:360px}.fig>svg{position:absolute;inset:0;width:100%;height:100%}
+.chartwrap{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:24px;align-items:start}
+.pie{border-top:5px solid var(--gold);padding-top:10px;font-size:14px}
+.pie h3{font-size:17px;margin:0 0 2px;font-weight:700}.pie .dt{color:var(--mut);font-size:13px;margin-bottom:8px}
+.pie svg{display:block;width:120px;height:120px;flex:none}
+.pierow{display:flex;gap:14px;align-items:center;margin:6px 0 10px}
+.side{border-left:2px solid var(--ink);padding-left:14px;flex:1}
+.side table{font-size:13px}.side td{border:0;padding:4px 0 4px 8px}.side td:first-child{padding-left:0;white-space:normal}
+.side .g{color:var(--mut);font-weight:400}.side tr.sum td{border-top:2px solid var(--ink);font-weight:700;padding-top:7px}
+@media(max-width:420px){.pierow{flex-direction:column;align-items:flex-start}}
+.pie table{font-size:13px}.pie .k{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.pie .hint{color:var(--mut);font-size:13px;margin-top:8px}
+@media(max-width:760px){.chartwrap{grid-template-columns:1fr}}
+.tip{position:absolute;pointer-events:none;background:var(--bg);border:1px solid var(--ink);padding:8px 10px;font-size:13px;line-height:1.45;white-space:nowrap;display:none;z-index:2}
+.tip b{font-weight:700}
+.rng{font-size:14px;color:var(--mut);margin-top:8px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:18px}
+.card{border-top:5px solid var(--c);padding-top:12px}
+.card h2{font-size:20px;margin:0;font-weight:700;display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.card h2 span{font-size:14px;font-weight:500;color:var(--mut)}
+.card .val{font-size:34px;font-weight:800;font-stretch:112%;margin:4px 0 2px}
+.card p{margin:0 0 10px;font-size:14px;color:var(--mut)}
+.share{height:8px;background:var(--soft);border-radius:4px;overflow:hidden;margin:6px 0 12px}.share>div{height:100%;background:var(--c)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:500;color:var(--mut);font-size:13px}
+.scroll{overflow-x:auto}
+.note{font-size:14px;color:var(--mut);border-top:2px solid var(--ink);padding-top:14px}
+.note p{margin:0 0 10px}
+.frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 4px;font-size:14px}
+.frac>span:first-child{border-bottom:1px solid currentColor;padding:0 4px}
+.frac>span:last-child{padding:0 4px}
+.math{color:var(--ink);font-size:15px;display:inline-flex;align-items:center;flex-wrap:wrap;gap:2px}
+.status{font-size:13px;color:var(--mut)}
+.status.err{color:var(--red)}
+@media(max-width:700px){.hero{grid-template-columns:1fr}.chips{grid-template-columns:repeat(2,minmax(0,1fr))}.fig{min-height:280px}}
+@media(prefers-reduced-motion:no-preference){.share>div{transition:width .4s}}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:24px;margin-top:22px}
+.tile>b{display:block;font-size:14px;font-weight:500;color:var(--mut);margin-bottom:4px}
+.ch{font-size:18px;font-weight:700;margin:0 0 4px}
+.pie td,.pie th{white-space:nowrap}
+.lk .chartwrap{grid-template-columns:minmax(0,1fr)}
+.lk .pie{max-width:none}
+.cards2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:24px;margin-top:8px}
+.cards2>div{border-top:2px solid var(--ink);padding-top:10px}.cards2 b{display:block;font-size:13px;font-weight:500;color:var(--mut)}.cards2 .v{font-size:34px;font-weight:800;font-stretch:112%;line-height:1.1}.cards2 .c{font-size:14px;margin-top:2px}
+.pick{margin:6px 0 12px}.pick b{display:block;font-size:13px;font-weight:500;color:var(--mut)}.pick span{font-size:30px;font-weight:800;font-stretch:112%}
+.hov{cursor:default}
+.ghost{font:600 15px Archivo,sans-serif;min-height:44px;padding:0 18px;border:1px solid var(--ink);background:var(--bg);color:var(--ink);border-radius:6px;cursor:pointer;margin-top:18px}.ghost[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+.note2{font-size:13px;color:var(--mut);margin:6px 0 0}
+</style>
+</head>
+<body>
+<div class="shell"><nav class="nav" id="nav" aria-label="Bölümler"></nav><div class="main">
+<header class="band">
+  <h1>Döviz kuru</h1>
+  <p class="sub">USD/TRY · TCMB döviz alış kuru · iş günü</p>
+  <div class="tiles">
+    <div class="tile"><b>USD/TRY</b><div class="big" id="k1">—</div><div class="date" id="d1"></div></div>
+    <div class="tile"><b>Günlük değişimin yıllıklandırılmış hızı</b><div class="big" id="k2">—</div><div class="date" id="d2"></div></div>
+  </div>
+</header>
+<section class="band lk" style="padding-top:8px">
+  <div class="ctrl">
+    <label>Başlangıç<input type="date" id="from" min="1987-12-01"></label>
+    <label>Bitiş<input type="date" id="to" min="1987-12-01"></label>
+    <div class="presets" id="presets" role="group" aria-label="Hazır aralıklar">
+      <button data-y="w">1W</button><button data-y="m">1M</button><button data-y="ytd">YTD</button><button data-y="1">1Y</button><button data-y="3">3Y</button><button data-y="5">5Y</button><button data-y="10">10Y</button><button data-y="all">Tümü</button>
+    </div>
+  </div>
+  <h2 class="ch">USD/TRY</h2>
+  <div class="fig" id="f1" style="min-height:360px"><svg id="s1" role="img" aria-label="Günlük USD/TRY kuru"></svg><div class="tip" id="t1"></div></div>
+  <button class="ghost" id="tg" aria-pressed="false">Yıllıklandırılmış günlük değişimi göster</button>
+  <div id="w2" hidden>
+    <h2 class="ch" style="margin-top:22px">Günlük kur değişiminin ima ettiği yıllık artış hızı (%)</h2>
+    <div class="fig" id="f2" style="min-height:300px"><svg id="s2" role="img" aria-label="Günlük kur değişiminin yıllıklandırılmış hızı"></svg><div class="tip" id="t2"></div></div>
+    <p class="note2" id="clip"></p>
+  </div>
+  <div class="rng" id="rng"></div>
+  <p class="status" id="status"></p>
+</section>
+</div></div>
+<script>
+{
+  // Sitenin sol menüsü. Yeni bölüm eklemek için SECTIONS listesine bir satır ekle.
+  const SECTIONS = [
+    { id: 'rezerv', title: 'Rezerv', href: 'https://claude.ai/artifact/A7nL8d26HsA2VptJCKMDS5' },
+    { id: 'likidite', title: 'Likidite', href: 'https://claude.ai/artifact/JMkyzuvXxi3eBdbDdC3nE6' },
+    { id: 'cek', title: 'Çek', href: 'https://claude.ai/artifact/LGLoTiPtShNDNXLzqTAq2y' },
+    { id: 'altin', title: 'Altın', href: 'https://claude.ai/artifact/QZK3PkxNXgnW3XNqkqoKqS' },
+    { id: 'kur', title: 'Kur', href: 'https://claude.ai/artifact/1fnytfkzMBygSbW9XF5Teq' }
+  ];
+  const SOON = ['Fiyatlar', 'Parasal', 'Dış istatistikler'];
+  const here = location.pathname.split('/').filter(Boolean);
+  const nav = document.getElementById('nav');
+  if (nav) {
+    const brand = document.createElement('p'); brand.className = 'brand'; brand.textContent = 'EVDS Pano';
+    const tag = document.createElement('p'); tag.className = 'tag'; tag.textContent = 'TCMB istatistikleri, her gün güncel';
+    nav.append(brand, tag);
+    for (const s of SECTIONS) {
+      const a = document.createElement('a'); a.href = s.href; a.textContent = s.title;
+      if (s.id === 'kur') a.setAttribute('aria-current', 'page');
+      nav.append(a);
+    }
+    for (const t of SOON) { const sp = document.createElement('span'); sp.className = 'soon'; sp.textContent = t + ' · yakında'; nav.append(sp); }
+  }
+}
+
+</script>
+<script>
+{
+const $=id=>document.getElementById(id);
+const S={usd:'TP.DK.USD.A.YTL'};
+const data={usd:new Map()};
+const MIN=Date.UTC(1987,11,1);
+const kf=new Intl.NumberFormat('tr-TR',{minimumFractionDigits:4,maximumFractionDigits:4});
+const pf=new Intl.NumberFormat('tr-TR',{minimumFractionDigits:1,maximumFractionDigits:1});
+const df=new Intl.DateTimeFormat('tr-TR',{day:'2-digit',month:'2-digit',year:'numeric',timeZone:'UTC'});
+const iso=d=>new Date(d).toISOString().slice(0,10);
+const today=new Date();today.setUTCHours(0,0,0,0);
+let range={from:null,to:null},preset='ytd',cur=[],show2=false;
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim()}
+// Yıllıklandırılmış günlük değişim (bileşik, takvim günü): ((K_t / K_önceki)^(365 / gün farkı) − 1) × 100
+function rows(){const ds=[...data.usd.keys()].sort((a,b)=>a-b);const out=[];let p=null;for(const d of ds){const k=data.usd.get(d);let a=null;if(p){const g=(d-p.d)/864e5;if(g>0)a=(Math.pow(k/p.k,365/g)-1)*100}out.push({d,k,a});p={d,k}}return out}
+const sa=v=>(v>0?'+':v<0?'−':'')+'%'+pf.format(Math.abs(v));
+function niceStep(max,n){const raw=max/n,p=10**Math.floor(Math.log10(raw)),f=raw/p;return (f<1.5?1:f<3?2:f<7?5:10)*p}
+
+function axisX(view,X,H,narrow){if(!view.length)return '';const spanY=(view[view.length-1].d-view[0].d)/(365*864e5);let g='',last=null,lastX=-1e9;const minGap=narrow?48:64;
+  const key=spanY>2?(d=>d.getUTCFullYear()):spanY>.25?(d=>d.getUTCFullYear()*12+d.getUTCMonth()):(d=>Math.floor((d.getTime()/864e5+3)/7));
+  const lab=spanY>2?(d=>String(d.getUTCFullYear())):spanY>.25?(d=>d.toLocaleDateString('tr-TR',{month:'short',year:'2-digit',timeZone:'UTC'})):(d=>d.toLocaleDateString('tr-TR',{day:'2-digit',month:'short',timeZone:'UTC'}));
+  for(const r of view){const d=new Date(r.d),k=key(d);if(k!==last){const x=X(r.d);if(last!==null&&x-lastX>=minGap){g+=`<text x="${x}" y="${H-8}" text-anchor="middle" font-size="12" fill="${css('--mut')}">${lab(d)}</text>`;lastX=x}else if(last===null)lastX=x-minGap*.6;last=k}}
+  return g}
+function frame(svg){const W=svg.clientWidth,H=svg.clientHeight,narrow=W<520;return {W,H,narrow,m:{l:narrow?38:52,r:12,t:10,b:28}}}
+
+function xscale(view,w,ml){const n=Math.max(view.length,22);const idx=new Map(view.map((r,i)=>[r.d,i]));return {x0:0,x1:n,X:d=>ml+((idx.get(d)??0)+.5)/n*w,bw:Math.min(18,Math.max(1,w/n*.8))}}
+
+function refAt(arr,t){let lo=0,hi=arr.length-1,ans=null;while(lo<=hi){const m=(lo+hi)>>1;if(arr[m].d<=t){ans=arr[m];lo=m+1}else hi=m-1}return ans}
+
+
+function tipHTML(r){return `<b>${df.format(new Date(r.d))}</b><br>USD/TRY: <b>${kf.format(r.k)}</b>`+(r.a!=null?`<br>Yıllıklandırılmış günlük değişim: <b>${sa(r.a)}</b>`:'')}
+function hover(svg,tipId,view,X,W){const tip=$(tipId),hov=svg.querySelector('.hov'),hx=svg.querySelector('.hx');
+  hov.addEventListener('mousemove',e=>{const p=e.clientX-svg.getBoundingClientRect().left;let b=view[0],bd=1e9;for(const q of view){const dd=Math.abs(X(q.d)-p);if(dd<bd){bd=dd;b=q}}const bx=X(b.d);
+    hx.setAttribute('x1',bx);hx.setAttribute('x2',bx);hx.setAttribute('visibility','visible');tip.innerHTML=tipHTML(b);tip.style.display='block';const tw=tip.offsetWidth;tip.style.left=(bx+12+tw>W?Math.max(bx-tw-12,0):bx+12)+'px';tip.style.top='12px'});
+  hov.addEventListener('mouseleave',()=>{tip.style.display='none';hx.setAttribute('visibility','hidden')})}
+function draw1(view){const svg=$('s1');const {W,H,narrow,m}=frame(svg);if(!W||!H)return;if(!view.length){svg.innerHTML='';return}
+  const w=W-m.l-m.r,h=H-m.t-m.b;const {X}=xscale(view,w,m.l);
+  let lo=Math.min(...view.map(r=>r.k)),hi=Math.max(...view.map(r=>r.k));const pad=(hi-lo)*.1||hi*.01||1;lo=Math.max(0,lo-pad);hi+=pad;
+  const Y=v=>m.t+(hi-v)/(hi-lo)*h;const st=niceStep(hi-lo,narrow?4:5);let g='';
+  for(let v=Math.ceil(lo/st)*st;v<=hi;v+=st)g+=`<line x1="${m.l}" x2="${m.l+w}" y1="${Y(v)}" y2="${Y(v)}" stroke="${css('--line')}"/><text x="${m.l-6}" y="${Y(v)+4}" text-anchor="end" font-size="12" fill="${css('--mut')}">${(Math.round(v*1e4)/1e4).toLocaleString('tr-TR')}</text>`;
+  g+=axisX(view,X,H,narrow);const c=css('--fx');
+  g+=`<path d="M${view.map(r=>X(r.d)+','+Y(r.k)).join('L')}" fill="none" stroke="${c}" stroke-width="2.2" stroke-linejoin="round"/>`;
+  const L=view[view.length-1];g+=`<circle cx="${X(L.d)}" cy="${Y(L.k)}" r="5" fill="${c}" stroke="${css('--bg')}" stroke-width="2"/>`;
+  g+=`<line class="hx" y1="${m.t}" y2="${m.t+h}" stroke="${css('--ink')}" visibility="hidden"/><rect class="hov" x="${m.l}" y="${m.t}" width="${w}" height="${h}" fill="transparent"/>`;
+  svg.innerHTML=g;hover(svg,'t1',view,X,W)}
+function draw2(view){const svg=$('s2');const {W,H,narrow,m}=frame(svg);if(!W||!H)return;const v=view.filter(r=>r.a!=null);if(!v.length){svg.innerHTML='';return}
+  const w=W-m.l-m.r,h=H-m.t-m.b;const {X,bw}=xscale(view,w,m.l);
+  // Tek günlük sıçramalar ekseni bozmasın diye eksen %1–%99 dilimiyle sınırlanır; dışarıda kalan çubuklar kesilir, değeri tooltip'te görünür
+  const srt=v.map(r=>r.a).sort((a,b)=>a-b);const q=p=>srt[Math.min(srt.length-1,Math.max(0,Math.round(p*(srt.length-1))))];
+  let lo=Math.min(0,v.length>50?q(.01):srt[0]),hi=Math.max(0,v.length>50?q(.99):srt[srt.length-1]);const sp=(hi-lo)||1;hi+=sp*.06;lo-=sp*.06;
+  const clip=v.filter(r=>r.a>hi||r.a<lo).length;$('clip').textContent=clip?`${clip} günün değeri eksen sınırının dışında kaldığı için çubuğu kesik gösteriliyor; değerin tamamı fareyle üzerine gelince görünür.`:'';
+  const Y=x=>m.t+(hi-Math.max(lo,Math.min(hi,x)))/(hi-lo)*h;const st=niceStep(hi-lo,narrow?4:5);let g='';
+  for(let x=Math.ceil(lo/st)*st;x<=hi;x+=st)g+=`<line x1="${m.l}" x2="${m.l+w}" y1="${Y(x)}" y2="${Y(x)}" stroke="${css('--line')}"/><text x="${m.l-6}" y="${Y(x)+4}" text-anchor="end" font-size="12" fill="${css('--mut')}">%${(Math.round(x)||0).toLocaleString('tr-TR')}</text>`;
+  g+=axisX(view,X,H,narrow);const pc=css('--red'),nc=css('--fx');
+  for(const r of v){const y1=Y(Math.max(0,r.a)),y2=Y(Math.min(0,r.a));g+=`<rect x="${X(r.d)-bw/2}" y="${y1}" width="${bw}" height="${Math.max(.5,y2-y1)}" fill="${r.a>0?pc:nc}"/>`}
+  g+=`<line x1="${m.l}" x2="${m.l+w}" y1="${Y(0)}" y2="${Y(0)}" stroke="${css('--ink')}" stroke-width="1.5"/>`;
+  g+=`<line class="hx" y1="${m.t}" y2="${m.t+h}" stroke="${css('--ink')}" visibility="hidden"/><rect class="hov" x="${m.l}" y="${m.t}" width="${w}" height="${h}" fill="transparent"/>`;
+  svg.innerHTML=g;hover(svg,'t2',v,X,W)}
+function render(){const all=rows();if(!all.length)return;const L=all[all.length-1];
+  $('k1').textContent=kf.format(L.k);$('d1').textContent='Son veri: '+df.format(new Date(L.d));
+  $('k2').textContent=L.a!=null?sa(L.a):'—';$('d2').textContent=L.a!=null?'Son veri: '+df.format(new Date(L.d))+' · bir önceki iş gününe göre':'';
+  const from=range.from??(L.d-365*864e5),to=range.to??L.d;const a0=refAt(all,from)||all.find(r=>r.d>=from);
+  const view=all.filter(r=>r.d>=(a0?a0.d:from)&&r.d<=to);cur=view;draw1(view);if(show2)draw2(view);
+  $('rng').textContent=view.length?'Kaynak: EVDS':'Seçili aralıkta veri yok.'}
+const ro=new ResizeObserver(()=>{draw1(cur);if(show2)draw2(cur)});ro.observe($('s1'));ro.observe($('s2'));
+$('tg').addEventListener('click',()=>{show2=!show2;$('w2').hidden=!show2;$('tg').setAttribute('aria-pressed',String(show2));$('tg').textContent=show2?'Yıllıklandırılmış günlük değişimi gizle':'Yıllıklandırılmış günlük değişimi göster';if(show2)requestAnimationFrame(()=>draw2(cur))});
+function setPreset(y){preset=y;for(const b of document.querySelectorAll('#presets button'))b.setAttribute('aria-pressed',String(b.dataset.y===y));
+  const all=rows();const end=all.length?all[all.length-1].d:today.getTime();const d=new Date(end);
+  if(y==='all')d.setTime(MIN);else if(y==='ytd')d.setTime(Date.UTC(d.getUTCFullYear(),0,1));else if(y==='w')d.setUTCDate(d.getUTCDate()-7);else if(y==='m')d.setUTCMonth(d.getUTCMonth()-1);else d.setUTCFullYear(d.getUTCFullYear()-(+y));
+  const f=d.getTime();range={from:f,to:end};$('from').value=iso(f);$('to').value=iso(end);ensure(f);render()}
+for(const b of document.querySelectorAll('#presets button'))b.addEventListener('click',()=>setPreset(b.dataset.y));
+function onInput(){const f=Date.parse($('from').value),t=Date.parse($('to').value);if(isNaN(f)||isNaN(t))return;preset=null;for(const b of document.querySelectorAll('#presets button'))b.setAttribute('aria-pressed','false');range={from:Math.min(f,t),to:Math.max(f,t)};ensure(range.from);render()}
+$('from').addEventListener('change',onInput);$('to').addEventListener('change',onInput);
+// Claude artifact sürümünün veri yükleyicisi: veriyi görüntüleyenin TCMB EVDS bağlantısından canlı çeker.
+const SERVER='TCMB MCP',TOOL='get_series_data';let mcp=null,loadedFrom=null;const pending=new Set();
+function status(t,err){const s=$('status');s.textContent=t;s.className='status'+(err?' err':'')}
+function pdate(s){let m=/^(\d{2})-(\d{2})-(\d{4})$/.exec(s);if(m)return Date.UTC(+m[3],+m[2]-1,+m[1]);m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s);return m?Date.UTC(+m[1],+m[2]-1,+m[3]):null}
+function strs(x,o=[]){if(typeof x==='string')o.push(x);else if(Array.isArray(x))x.forEach(y=>strs(y,o));else if(x&&typeof x==='object')Object.values(x).forEach(y=>strs(y,o));return o}
+function rowsOf(p){const r=[];for(const s of strs(p))for(const line of s.split('\n')){const c=line.split('|').map(z=>z.trim()).filter(z=>z!=='');if(c.length<2)continue;const d=pdate(c[0]),n=parseFloat(c[c.length-1]);if(d!=null&&isFinite(n))r.push([d,n])}return r}
+function watch(s,e){const tag=iso(s);pending.add(tag);
+  mcp.watchTool(SERVER,TOOL,{series_code:S.usd,start_date:iso(s),end_date:iso(e),full_data:true},ev=>{
+    if(ev.type==='data'){for(const [d,v] of rowsOf(ev.result&&ev.result.payload))data.usd.set(d,v);pending.delete(tag);
+      status(pending.size?'EVDS\'ten yükleniyor…':'Canlı EVDS verisi · güncellendi '+new Date().toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}));
+      if(range.to==null){if(rows().length)setPreset(preset??'ytd')}else render()}
+    else if(ev.type==='error'){pending.delete(tag);status('EVDS bağlantısında hata: '+String((ev.error&&(ev.error.code||ev.error.message))||'bilinmiyor'),true)}})}
+// takvim günü satırları da geldiği için 2 yıllık parçalar 1000 satır sınırının altında kalır
+function ensure(from){if(!mcp||loadedFrom==null)return;while(loadedFrom>from&&loadedFrom>MIN){const e=loadedFrom-864e5;const s=new Date(loadedFrom);s.setUTCFullYear(s.getUTCFullYear()-2);const st=Math.max(s.getTime(),MIN);watch(st,e);loadedFrom=st}}
+(async()=>{status('EVDS bağlantısı kuruluyor…');try{mcp=await window.claude.use('mcp')}catch(e){mcp=null}
+  if(!mcp){status('Bu sayfa verileri sizin TCMB EVDS bağlantınızla çeker. Bağlantı bu görünümde kullanılamıyor.',true);return}
+  const s=new Date(today);s.setUTCFullYear(s.getUTCFullYear()-2);watch(s.getTime(),today.getTime());loadedFrom=s.getTime()})();
+}
+</script>
+</body>
+</html>
