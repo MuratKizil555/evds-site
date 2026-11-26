@@ -113,16 +113,18 @@ def main():
         print("EVDS_API_KEY tanımlı değil; veri çekilmedi.", file=sys.stderr)
         sys.exit(2)
     today = dt.date.today()
+    # TCMB kurları bir gün önceden ilan edilir ve Actions UTC saatinde çalışır; bitişi ileri al ki en son tarih kaçmasın
+    end = today + dt.timedelta(days=7)
     data = {}
     for k, code in WEEKLY.items():
         data[k] = series(code, START, today, chunk_years=15)
     raw_daily = {}
     for k, code in DAILY_TO_WEEKLY.items():
-        raw_daily[k] = series(code, START, today)
+        raw_daily[k] = series(code, START, end)
         w = to_friday_weekly(raw_daily[k])
         data[k] = {d: v for d, v in w.items() if d <= today}
     for k, code in DAILY.items():
-        data[k] = series(code, PX_START, today)
+        data[k] = series(code, PX_START, end)
     for k, v in data.items():
         if not v:
             raise RuntimeError(f"{k} boş geldi")
@@ -131,7 +133,7 @@ def main():
     with open(OUT, "w", encoding="utf-8") as f:
         json.dump({"updated": dt.datetime.utcnow().isoformat() + "Z",
                    "series": {k: pairs(v) for k, v in data.items()}}, f, separators=(",", ":"))
-    lik = {k: series(code, LIK_START, today) for k, code in LIKIDITE.items()}
+    lik = {k: series(code, LIK_START, end) for k, code in LIKIDITE.items()}
     for k, v in lik.items():
         if not v:
             raise RuntimeError(f"likidite {k} boş geldi")

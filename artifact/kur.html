@@ -253,7 +253,7 @@ function watch(s,e){const tag=iso(s);pending.add(tag);
 function ensure(from){if(!mcp||loadedFrom==null)return;while(loadedFrom>from&&loadedFrom>MIN){const e=loadedFrom-864e5;const s=new Date(loadedFrom);s.setUTCFullYear(s.getUTCFullYear()-2);const st=Math.max(s.getTime(),MIN);watch(st,e);loadedFrom=st}}
 (async()=>{status('EVDS bağlantısı kuruluyor…');try{mcp=await window.claude.use('mcp')}catch(e){mcp=null}
   if(!mcp){status('Bu sayfa verileri sizin TCMB EVDS bağlantınızla çeker. Bağlantı bu görünümde kullanılamıyor.',true);return}
-  const s=new Date(today);s.setUTCFullYear(s.getUTCFullYear()-2);watch(s.getTime(),today.getTime());loadedFrom=s.getTime()})();
+  const s=new Date(today);s.setUTCFullYear(s.getUTCFullYear()-2);watch(s.getTime(),today.getTime()+7*864e5);loadedFrom=s.getTime()})();
 }
 </script>
 </body>
