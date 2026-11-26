@@ -93,6 +93,10 @@ th{font-weight:500;color:var(--mut);font-size:13px}
 .tile>b{display:block;font-size:14px;font-weight:500;color:var(--mut);margin-bottom:4px}
 .ch{font-size:18px;font-weight:700;margin:0 0 4px}
 .pie td,.pie th{white-space:nowrap}
+.lk .chartwrap{grid-template-columns:minmax(0,1fr)}
+.lk .pie{max-width:none}
+.cards2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:24px;margin-top:8px}
+.cards2>div{border-top:2px solid var(--ink);padding-top:10px}.cards2 b{display:block;font-size:13px;font-weight:500;color:var(--mut)}.cards2 .v{font-size:34px;font-weight:800;font-stretch:112%;line-height:1.1}.cards2 .c{font-size:14px;margin-top:2px}
 .pick{margin:6px 0 12px}.pick b{display:block;font-size:13px;font-weight:500;color:var(--mut)}.pick span{font-size:30px;font-weight:800;font-stretch:112%}
 .hov{cursor:pointer}
 </style>
@@ -108,7 +112,7 @@ th{font-weight:500;color:var(--mut);font-size:13px}
   </div>
 </header>
 
-<section class="band" style="padding-top:8px">
+<section class="band lk" style="padding-top:8px">
   <div class="ctrl">
     <label>Başlangıç<input type="date" id="from" min="2011-01-03"></label>
     <label>Bitiş<input type="date" id="to" min="2011-01-03"></label>
@@ -124,7 +128,7 @@ th{font-weight:500;color:var(--mut);font-size:13px}
       <h2 class="ch" style="margin-top:28px">Ağırlıklı ortalama fonlama maliyeti</h2>
       <div class="fig" id="f2" style="min-height:240px"><svg id="s2" role="img" aria-label="Günlük TCMB ağırlıklı ortalama fonlama maliyeti, yüzde"></svg><div class="tip" id="t2"></div></div>
     </div>
-    <aside class="pie" id="pie" aria-live="polite"><h3>Özet</h3><div class="dt">Veri yükleniyor…</div></aside>
+    <aside class="pie" id="pie" aria-live="polite" style="border-top-color:var(--ink)"><h3>Özet</h3><div class="dt">Veri yükleniyor…</div></aside>
   </div>
   <div class="rng" id="rng"></div>
   <p class="status" id="status"></p>
@@ -158,9 +162,9 @@ function axisX(x0,x1,X,H,narrow){const spanY=(x1-x0)/(365*864e5);const ticks=[];
   else if(spanY>.1){const k=spanY>1?3:spanY>.5?2:1;let d=new Date(Date.UTC(s0.getUTCFullYear(),s0.getUTCMonth()+1,1));while(d.getTime()<=x1){if(d.getUTCMonth()%k===0)ticks.push([d.getTime(),d.toLocaleDateString('tr-TR',{month:'short',year:'2-digit',timeZone:'UTC'})]);d.setUTCMonth(d.getUTCMonth()+1)}}
   else{let d=new Date(x0);d.setUTCHours(0,0,0,0);d.setUTCDate(d.getUTCDate()+1);const st=spanY>.05?7:1;while(d.getTime()<=x1){ticks.push([d.getTime(),d.toLocaleDateString('tr-TR',{day:'2-digit',month:'short',timeZone:'UTC'})]);d.setUTCDate(d.getUTCDate()+st)}}
   for(const [t,l] of ticks)g+=`<text x="${X(t)}" y="${H-8}" text-anchor="middle" font-size="12" fill="${css('--mut')}">${l}</text>`;return g}
-function tipHTML(r){return `<b>${df.format(new Date(r.d))}</b><br>Net fonlama: <b>${bn(r.n)}</b> mr TL`+(r.a!=null?`<br>Fonlama: ${bn(r.a)}`:'')+(r.b!=null?`<br>Sterilizasyon: ${bn(r.b)}`:'')+(r.r!=null?`<br>AOFM: <b>${pc(r.r)}</b>`:'')}
+function tipHTML(r){return `<b>${df.format(new Date(r.d))}</b><br>Net fonlama: <b>${bn(r.n)}</b> mr TL`+(r.r!=null?`<br>AOFM: <b>${pc(r.r)}</b>`:'')}
 function frame(svg){const W=svg.clientWidth,H=svg.clientHeight,narrow=W<520;return {W,H,narrow,m:{l:narrow?38:52,r:12,t:10,b:28}}}
-function xscale(view,w,ml){const day=864e5;const x0=view[0].d-day*.6,x1=Math.max(view[view.length-1].d+day*.6,x0+30*day);return {x0,x1,X:d=>ml+(d-x0)/(x1-x0)*w,bw:Math.min(14,Math.max(1,w*day/(x1-x0)*.72))}}
+function xscale(view,w,ml){const day=864e5;const x0=view[0].d-day*.6,x1=Math.max(view[view.length-1].d+day*.6,x0+30*day);return {x0,x1,X:d=>ml+(d-x0)/(x1-x0)*w,bw:Math.min(18,Math.max(1,w*day/(x1-x0)*.8))}}
 function hover(svg,tip,view,X,x0,x1,m,w,W){const hov=svg.querySelector('.hov'),hx=svg.querySelector('.hx');
   const near=e=>{const rc=svg.getBoundingClientRect();const p=e.clientX-rc.left;const t=x0+(p-m.l)/w*(x1-x0);let b=view[0];for(const q of view)if(Math.abs(q.d-t)<Math.abs(b.d-t))b=q;return b};
   hov.addEventListener('mousemove',e=>{const b=near(e),bx=X(b.d);hx.setAttribute('x1',bx);hx.setAttribute('x2',bx);hx.setAttribute('visibility','visible');tip.innerHTML=tipHTML(b);tip.style.display='block';const tw=tip.offsetWidth;tip.style.left=(bx+12+tw>W?Math.max(bx-tw-12,0):bx+12)+'px';tip.style.top='12px'});
@@ -190,25 +194,16 @@ function draw2(view){const svg=$('s2');const {W,H,narrow,m}=frame(svg);const v2=
   svg.innerHTML=g;hover(svg,$('t2'),v2,X,x0,x1,m,w,W)}
 function refAt(arr,t){let lo=0,hi=arr.length-1,ans=null;while(lo<=hi){const m=(lo+hi)>>1;if(arr[m].d<=t){ans=arr[m];lo=m+1}else hi=m-1}return ans}
 function panel(view){const el=$('pie');const all=rows();const cl=v=>v>0?'up':v<0?'dn':'fl';
+  const card=(t,v,c)=>`<div><b>${t}</b><div class="v">${v}</div><div class="c">${c}</div></div>`;
+  const ch=(d,isR)=>d==null?'<span class="fl">—</span>':`<span class="${cl(d)}">${isR?(d>0?'+':d<0?'−':'')+rf.format(Math.abs(d))+' puan':sg(d)+' mr TL'}</span>`;
   if(sel!=null){const i=all.findIndex(r=>r.d===sel);const r=all[i],p=i>0?all[i-1]:null;if(!r){sel=null;return panel(view)}
     const dn=p?r.n-p.n:null,dr=(p&&p.r!=null&&r.r!=null)?r.r-p.r:null;
-    el.innerHTML=`<h3>${df.format(new Date(r.d))}</h3><div class="dt">Seçilen gün${p?' · önceki iş günü '+df.format(new Date(p.d)):''}</div>
-    <div class="pick"><b>Net fonlama</b><span class="${cl(r.n)}">${bn(r.n)}</span> <small>mr TL</small></div>
-    <table><tr><th></th><th>Değer</th><th>Önceki güne göre</th></tr>
-    <tr><td>Fonlama</td><td>${r.a!=null?bn(r.a):'—'}</td><td>${p&&p.a!=null&&r.a!=null?`<span class="${cl(r.a-p.a)}">${sg(r.a-p.a)}</span>`:'—'}</td></tr>
-    <tr><td>Sterilizasyon</td><td>${r.b!=null?bn(r.b):'—'}</td><td>${p&&p.b!=null&&r.b!=null?`<span class="${cl(r.b-p.b)}">${sg(r.b-p.b)}</span>`:'—'}</td></tr>
-    <tr><td><b>Net fonlama</b></td><td><b>${bn(r.n)}</b></td><td>${dn==null?'—':`<span class="${cl(dn)}">${sg(dn)}</span>`}</td></tr>
-    <tr><td>AOFM</td><td><b>${r.r!=null?pc(r.r):'—'}</b></td><td>${dr==null?'—':`<span class="${cl(dr)}">${(dr>0?'+':dr<0?'−':'')+rf.format(Math.abs(dr))} puan</span>`}</td></tr></table>
-    <p class="hint">mr TL. Net fonlama = fonlama − sterilizasyon. Aralık özetine dönmek için aynı güne tekrar tıklayın.</p>`;return}
-  const A=view[0],B=view[view.length-1];if(!A||!B){el.innerHTML='<h3>Seçili aralık özeti</h3><div class="dt">Seçili aralıkta veri yok.</div>';return}
-  const avg=view.reduce((s,r)=>s+r.n,0)/view.length;const rs=view.filter(r=>r.r!=null);const rmin=Math.min(...rs.map(r=>r.r)),rmax=Math.max(...rs.map(r=>r.r));
+    el.innerHTML=`<h3>${df.format(new Date(r.d))}</h3><div class="dt">Seçilen gün${p?' · değişimler önceki iş gününe ('+df.format(new Date(p.d))+') göre':''} · aralık özetine dönmek için aynı güne tekrar tıklayın</div>
+    <div class="cards2">${card('Net fonlama (mr TL)',`<span class="${cl(r.n)}">${bn(r.n)}</span>`,ch(dn))}${card('AOFM',r.r!=null?pc(r.r):'—',ch(dr,true))}</div>`;return}
+  const A=view[0],B=view[view.length-1];if(!A||!B){el.innerHTML='<h3>Seçili aralık</h3><div class="dt">Seçili aralıkta veri yok.</div>';return}
   const dn=B.n-A.n,dr=(B.r!=null&&A.r!=null)?B.r-A.r:null;
-  el.innerHTML=`<h3>Seçili aralık özeti</h3><div class="dt">${df.format(new Date(A.d))} → ${df.format(new Date(B.d))} · ${view.length} iş günü</div>
-  <table><tr><th></th><th>Başlangıç</th><th>Son</th><th>Değişim</th></tr>
-  <tr><td>Net fonlama (mr TL)</td><td>${bn(A.n)}</td><td><b>${bn(B.n)}</b></td><td class="${cl(dn)}">${sg(dn)}</td></tr>
-  <tr><td>AOFM</td><td>${A.r!=null?pc(A.r):'—'}</td><td><b>${B.r!=null?pc(B.r):'—'}</b></td><td class="${dr==null?'fl':cl(dr)}">${dr==null?'—':(dr>0?'+':dr<0?'−':'')+rf.format(Math.abs(dr))+' puan'}</td></tr></table>
-  <table style="margin-top:12px"><tr><td>Ortalama net fonlama</td><td><b>${bn(avg)}</b> mr TL</td></tr><tr><td>AOFM en düşük / en yüksek</td><td>${rs.length?pc(rmin)+' / '+pc(rmax):'—'}</td></tr></table>
-  <p class="hint">Bir güne tıklayarak o günün ayrıntılarını görebilirsiniz.</p>`}
+  el.innerHTML=`<h3>Seçili aralık</h3><div class="dt">${df.format(new Date(A.d))} → ${df.format(new Date(B.d))} · değişimler başlangıç gününe göre · bir güne tıklayarak o günü görebilirsiniz</div>
+  <div class="cards2">${card('Net fonlama (mr TL)',`<span class="${cl(B.n)}">${bn(B.n)}</span>`,ch(dn))}${card('AOFM',B.r!=null?pc(B.r):'—',ch(dr,true))}</div>`}
 function render(){const all=rows();if(!all.length)return;const L=all[all.length-1];
   $('kN').firstChild.nodeValue=bn(L.n)+' ';$('kNd').textContent='Son veri: '+df.format(new Date(L.d));
   const lr=[...all].reverse().find(r=>r.r!=null);if(lr){$('kR').textContent=pc(lr.r);$('kRd').textContent='Son veri: '+df.format(new Date(lr.d))}
