@@ -61,7 +61,8 @@ Site sol tarafta bir menüyle bölümlere ayrılır. Her bölüm bir sayfadır.
 - Yapı: `assets/nav.js` (sol menü; yeni bölüm = SECTIONS listesine satır), `rezerv/index.html` (Rezerv sayfası), `scripts/fetch_evds.py` (EVDS'ten veri → `data/rezerv.json`), `.github/workflows/deploy.yml` (push'ta ve hafta içi 16:37/19:37 TR'de veri çek + Pages'e yayınla).
 - EVDS anahtarı repo secret `EVDS_API_KEY`. EVDS bir istekte ~1000 gözlem döndürür: günlük seriler 2 yıllık, haftalık 15 yıllık parçalarla çekilir.
 - Değişiklik akışı: depoda düzenle → commit → push → 2–3 dk içinde sitede. Yayını `gh api repos/MuratKizil555/evds-site/actions/runs` ile takip et.
-- Prototip artifact (yalnızca yedek, canlı veri bağlantısıyla): https://claude.ai/artifact/A7nL8d26HsA2VptJCKMDS5
+- **Claude artifact sürümü (kullanıcı burada görmeyi tercih ediyor):** https://claude.ai/artifact/A7nL8d26HsA2VptJCKMDS5 (slug 49d4a565-13ab-48c7-a104-0f98a491fc3e). Sitedeki sayfanın aynısı; veriyi görüntüleyenin TCMB EVDS bağlantısından canlı çeker.
+- **Her değişiklikte iki yere yayınla:** `rezerv/index.html` düzenle → `python3 scripts/build_artifact.py` (artifact/rezerv.html üretir; veri yükleyici `scripts/artifact_loader.js`, /*LOADER-START*/…/*LOADER-END*/ bloğunun yerine geçer) → artifact'i publish_files ile güncelle (as: index.html) → commit + push (GitHub sitesi).
 
 ### Rezerv bölümü — sayfa özellikleri
 - **Brüt / Net** düğmeleriyle iki görünüm. Üstte yalnızca son değer ve tarih; değişim pencereleri (1W/1M/YTD/1Y kutuları) ve alt bölümler kullanıcı isteğiyle kaldırıldı.

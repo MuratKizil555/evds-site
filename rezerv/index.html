@@ -322,6 +322,7 @@ function renderNetPie(){
   <p class="hint">${selOff?'Bir haftaya tıklayarak o haftayı görebilirsiniz.':'Aralığa dönmek için aynı haftaya tekrar tıklayın.'} Yükümlülük artışı net rezervi azalttığı için eksi işaretle gösterilir. Kaynak: analitik bilanço TP.AB.A02, TP.AB.A10; kur TP.DK.USD.A.YTL.</p>`;
 }
 
+/*LOADER-START*/
 function status(t,err){const s=$('status');s.textContent=t;s.className='status'+(err?' err':'')}
 function ensure(){}
 (async()=>{
@@ -335,6 +336,7 @@ function ensure(){}
     setPreset('ytd');
   }catch(e){status('Veri dosyası henüz hazır değil ya da okunamadı ('+String(e.message||e)+').',true)}
 })();
+/*LOADER-END*/
 }
 </script>
 </body>
