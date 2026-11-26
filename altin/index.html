@@ -184,12 +184,12 @@ const mm=t=>new Intl.DateTimeFormat('tr-TR',{month:'short',year:'numeric',timeZo
 // Her ay kendi ayının ons fiyatı ve kuruyla hesaplanır; aralık toplamı aylık karşılıkların toplamıdır.
 // Ortalama ons fiyatı = Σ USD ÷ Σ ons, ortalama kur = Σ TL ÷ Σ USD (ithalat ağırlıklı)
 function table(view){const t=$('tbl');if(!view.length){t.innerHTML='';return}if(sel!=null&&!view.some(r=>r.d===sel))sel=null;
-  let h='<thead><tr><th>Dönem</th><th>İthalat (kg)</th><th>Ons</th><th>Ons fiyatı ($)</th><th>USD karşılığı (milyon $)</th><th>USD/TL</th><th>TL karşılığı (milyar TL)</th></tr></thead><tbody>';
+  let h='<thead><tr><th>Dönem</th><th>İthalat (kg)</th><th>Ons fiyatı ($)</th><th>USD karşılığı (milyon $)</th><th>USD/TL</th><th>TL karşılığı (milyar TL)</th></tr></thead><tbody>';
   if(sel!=null){const r=view.find(x=>x.d===sel);
-    h+=`<tr><td>${mf.format(new Date(r.d))}</td><td>${kf.format(r.kg)}</td><td>${kf.format(r.oz)}</td><td>${r.p!=null?d2.format(r.p):'—'}</td><td>${fU(r.u)}</td><td>${r.k!=null?d2.format(r.k):'—'}</td><td>${fT(r.t)}</td></tr>`;
+    h+=`<tr><td>${mf.format(new Date(r.d))}</td><td>${kf.format(r.kg)}</td><td>${r.p!=null?d2.format(r.p):'—'}</td><td>${fU(r.u)}</td><td>${r.k!=null?d2.format(r.k):'—'}</td><td>${fT(r.t)}</td></tr>`;
     t.innerHTML=h+'</tbody>';$('tnote').textContent='Seçili ay. Aralık özetine dönmek için aynı aya tekrar tıklayın.';return}
   const kg=view.reduce((a,r)=>a+r.kg,0),pr=view.filter(r=>r.u!=null&&r.t!=null);const ozp=pr.reduce((a,r)=>a+r.oz,0),U=pr.reduce((a,r)=>a+r.u,0),T=pr.reduce((a,r)=>a+r.t,0);
-  h+=`<tr class="tot"><td>${mm(view[0].d)} – ${mm(view[view.length-1].d)} (${view.length} ay)</td><td>${kf.format(kg)}</td><td>${kf.format(kg*OZ)}</td><td>${pr.length?d2.format(U/ozp):'—'}</td><td>${pr.length?fU(U):'—'}</td><td>${pr.length?d2.format(T/U):'—'}</td><td>${pr.length?fT(T):'—'}</td></tr>`;
+  h+=`<tr class="tot"><td>${mm(view[0].d)} – ${mm(view[view.length-1].d)} (${view.length} ay)</td><td>${kf.format(kg)}</td><td>${pr.length?d2.format(U/ozp):'—'}</td><td>${pr.length?fU(U):'—'}</td><td>${pr.length?d2.format(T/U):'—'}</td><td>${pr.length?fT(T):'—'}</td></tr>`;
   t.innerHTML=h+'</tbody>';
   $('tnote').textContent='Seçili tarih aralığının toplamı. Her ay kendi ayının ortalama ons fiyatı ve kuruyla hesaplanıp toplanır; ons fiyatı ve kur sütunları ithalat ağırlıklı ortalamadır.'+(pr.length<view.length?` ${view.length-pr.length} ay (Temmuz 2018 öncesi) ons fiyatı olmadığı için USD ve TL toplamına dahil değil.`:'')+' Bir aya tıklayarak o ayı görebilirsiniz.'}
 function render(){const all=rows();if(!all.length)return;const L=all[all.length-1];const lm='Son veri: '+mf.format(new Date(L.d));
