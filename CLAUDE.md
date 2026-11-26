@@ -90,10 +90,11 @@ Site sol tarafta bir menüyle bölümlere ayrılır. Her bölüm bir sayfadır.
 - Üstte üç kutu: son ay ithalat (kg), USD karşılığı (milyon $), TL karşılığı (milyar TL). Grafik: aylık kg çubukları (altın rengi). Altında tablo: ay, kg, ons, ons fiyatı, USD karşılığı, USD/TL, TL karşılığı. Tablo tek satır: varsayılan seçili tarih aralığının toplamı (kg, USD ve TL toplamı; ons miktarı sütunu yok; ons fiyatı = ΣUSD÷Σons, kur = ΣTL÷ΣUSD, ithalat ağırlıklı). Her ay kendi ayının aylık ortalama fiyatı ve kuruyla hesaplanıp toplanır. Grafikte bir aya tıklanınca tablo o ayı gösterir (çubuk çerçevelenir, diğerleri soluklaşmaz); aynı aya ikinci tıklama aralık toplamına döner.
 
 ### Kur bölümü — sayfa özellikleri
-- Seri: TP.DK.USD.A.YTL (USD/TRY, TCMB döviz alış, günlük; sitede 1987'den). Üstte iki kutu: son kur; önceki iş gününe göre değişim (büyük: bps, altında %, ve yıllıklandırılmış %; artış kırmızı).
-- Grafik 1: USD/TRY çizgi (iş günü ekseni). Düğme ("Yıllıklandırılmış değişimi göster") ile açılan grafik 2: yıllıklandırılmış günlük değişim, çizgi, sıfır çizgisi.
-- Formül (Claude önerisi, onay bekliyor): günlük değişim % = (K_t ÷ K_önceki − 1) × 100; bps = % × 100; yıllıklandırılmış % = günlük % × 365 ÷ takvim günü farkı (basit, bileşiksiz). Bileşik sürüm kullanıcı tarafından yanlış bulundu.
+- Seri: TP.DK.USD.A.YTL (USD/TRY, TCMB döviz alış, günlük; sitede 1987'den). Üstte iki kutu: son kur; önceki iş gününe göre fark (büyük: bps = kur farkı × 10.000, ör. 50,5866 − 50,5531 = 335 bps; altında % ve yıllıklandırılmış %; pozitif yeşil, negatif kırmızı).
+- Üstte **Kur / Yıllıklandırılmış değişim** düğmeleri tek grafiği değiştirir. Kur: USD/TRY çizgi (iş günü ekseni). Yıllıklandırılmış: yıllıklandırılmış günlük değişim, çizgi, sıfır çizgisi.
+- Formül (Claude önerisi, onay bekliyor): günlük değişim % = (K_t ÷ K_önceki − 1) × 100; bps = (K_t − K_önceki) × 10.000 (kullanıcı tanımı); yıllıklandırılmış % = günlük % × 365 ÷ takvim günü farkı (basit, bileşiksiz). Bileşik sürüm kullanıcı tarafından yanlış bulundu.
 - Eksen %1–%99 dilimiyle sınırlanır; dışarıda kalan değerler eksen sınırında kesilir, tooltip'te tam değer.
+- Tarih: EVDS tarihleri kullanılır (TCMB kuru bir gün önce 15:30'da ilan edilir; EVDS'te uygulanacağı günün tarihini taşır). Kullanıcı ilan gününü kastedebilir.
 - Tarih kontrolleri: 1W…Tümü, varsayılan YTD. "Kaynak: EVDS".
 
 ### Rezerv bölümü — sayfa özellikleri
