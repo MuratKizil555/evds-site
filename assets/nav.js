@@ -3,7 +3,8 @@
   const SECTIONS = [
     { id: 'rezerv', title: 'Rezerv', href: '../rezerv/' },
     { id: 'likidite', title: 'Likidite', href: '../likidite/' },
-    { id: 'cek', title: 'Çek', href: '../cek/' }
+    { id: 'cek', title: 'Çek', href: '../cek/' },
+    { id: 'altin', title: 'Altın', href: '../altin/' }
   ];
   const SOON = ['Fiyatlar', 'Döviz', 'Parasal', 'Dış istatistikler'];
   const here = location.pathname.split('/').filter(Boolean);

@@ -1,0 +1,19 @@
+// Claude artifact sürümünün veri yükleyicisi: veriyi görüntüleyenin TCMB EVDS bağlantısından canlı çeker.
+// Ons fiyatı ve USD/TL için EVDS'in aylık ortalama dönüşümü (frequency 5, avg) kullanılır.
+const SERVER='TCMB MCP',TOOL='get_series_data';let mcp=null;const pending=new Set();
+function status(t,err){const s=$('status');s.textContent=t;s.className='status'+(err?' err':'')}
+function pdate(s){let m=/^(\d{4})-(\d{1,2})$/.exec(s);if(m)return Date.UTC(+m[1],+m[2]-1,1);m=/^(\d{2})-(\d{2})-(\d{4})$/.exec(s);if(m)return Date.UTC(+m[3],+m[2]-1,1);m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s);return m?Date.UTC(+m[1],+m[2]-1,1):null}
+function strs(x,o=[]){if(typeof x==='string')o.push(x);else if(Array.isArray(x))x.forEach(y=>strs(y,o));else if(x&&typeof x==='object')Object.values(x).forEach(y=>strs(y,o));return o}
+function rowsOf(p){const r=[];for(const s of strs(p))for(const line of s.split('\n')){const c=line.split('|').map(z=>z.trim()).filter(z=>z!=='');if(c.length<2)continue;const d=pdate(c[0]),n=parseFloat(c[c.length-1]);if(d!=null&&isFinite(n))r.push([d,n])}return r}
+(async()=>{status('EVDS bağlantısı kuruluyor…');try{mcp=await window.claude.use('mcp')}catch(e){mcp=null}
+  if(!mcp){status('Bu sayfa verileri sizin TCMB EVDS bağlantınızla çeker. Bağlantı bu görünümde kullanılamıyor.',true);return}
+  const end=new Date().toISOString().slice(0,10);
+  const jobs=[['kg','1995-07-01',null],['px','2018-07-01','5'],['usd','1995-07-01','5']];
+  for(const [k,start,freq] of jobs){
+    // aylık seriler 1000 satır sınırının altında; tek istekte gelir
+    const inp={series_code:S[k],start_date:start,end_date:end,full_data:true};if(freq){inp.frequency=freq;inp.aggregation='avg'}
+    pending.add(k);mcp.watchTool(SERVER,TOOL,inp,ev=>{
+      if(ev.type==='data'){for(const [d,v] of rowsOf(ev.result&&ev.result.payload))data[k].set(d,v);pending.delete(k);
+        status(pending.size?'EVDS\'ten yükleniyor…':'Canlı EVDS verisi · güncellendi '+new Date().toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}));
+        if(range.to==null){if(rows().length)setPreset(preset??'3')}else render()}
+      else if(ev.type==='error'){pending.delete(k);status('EVDS bağlantısında hata: '+String((ev.error&&(ev.error.code||ev.error.message))||'bilinmiyor'),true)}})}})();

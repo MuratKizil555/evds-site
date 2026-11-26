@@ -24,6 +24,17 @@ OUT_CEK = os.path.join(os.path.dirname(__file__), "..", "data", "cek.json")
 # Çek: takas odasında işlem gören çekler (aylık; adet ve bin TL)
 CEK = {"ta": "TP.BTO1", "tt": "TP.BTO2", "ka": "TP.BTO3", "kt": "TP.BTO4"}
 CEK_START = dt.date(2008, 1, 1)
+OUT_ALTIN = os.path.join(os.path.dirname(__file__), "..", "data", "altin.json")
+# Altın ithalatı (BİST, aylık kg). Ons fiyatı ve USD/TL kuru günlük verinin aylık ortalaması.
+ALTIN_KG = "TP.GOLDIMPRT.V1"
+ALTIN_START = dt.date(1995, 7, 1)
+
+
+def monthly_avg(daily):
+    groups = {}
+    for d, v in daily.items():
+        groups.setdefault(dt.date(d.year, d.month, 1), []).append(v)
+    return {m: sum(v) / len(v) for m, v in groups.items()}
 
 # Seri kodları (skill: onaylanmış formüller)
 WEEKLY = {"tot": "TP.AB.TOPLAM", "gold": "TP.AB.C1", "fx": "TP.AB.C2"}  # haftalık (Cuma), milyon $
@@ -104,8 +115,10 @@ def main():
     data = {}
     for k, code in WEEKLY.items():
         data[k] = series(code, START, today, chunk_years=15)
+    raw_daily = {}
     for k, code in DAILY_TO_WEEKLY.items():
-        w = to_friday_weekly(series(code, START, today))
+        raw_daily[k] = series(code, START, today)
+        w = to_friday_weekly(raw_daily[k])
         data[k] = {d: v for d, v in w.items() if d <= today}
     for k, code in DAILY.items():
         data[k] = series(code, PX_START, today)
@@ -133,6 +146,18 @@ def main():
     with open(OUT_CEK, "w", encoding="utf-8") as f:
         json.dump({"updated": dt.datetime.utcnow().isoformat() + "Z",
                    "series": {k: pairs(v) for k, v in cek.items()}}, f, separators=(",", ":"))
+    altin = {
+        "kg": series(ALTIN_KG, ALTIN_START, today, chunk_years=15),
+        "px": monthly_avg(data["px"]),
+        "usd": monthly_avg(raw_daily["usd"]),
+    }
+    for k, v in altin.items():
+        if not v:
+            raise RuntimeError(f"altin {k} boş geldi")
+        print(f"altin {k}: {len(v)} gözlem, son {max(v)}")
+    with open(OUT_ALTIN, "w", encoding="utf-8") as f:
+        json.dump({"updated": dt.datetime.utcnow().isoformat() + "Z",
+                   "series": {k: pairs(v) for k, v in altin.items()}}, f, separators=(",", ":"))
 
 
 if __name__ == "__main__":

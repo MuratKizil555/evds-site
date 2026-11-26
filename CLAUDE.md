@@ -68,6 +68,7 @@ Site sol tarafta bir menüyle bölümlere ayrılır. Her bölüm bir sayfadır.
 - Rezerv: https://claude.ai/artifact/A7nL8d26HsA2VptJCKMDS5 (slug 49d4a565-13ab-48c7-a104-0f98a491fc3e)
 - Likidite: https://claude.ai/artifact/JMkyzuvXxi3eBdbDdC3nE6 (slug 8c915683-5b5f-4dee-ae3a-4a0a19e90ccb)
 - Çek: https://claude.ai/artifact/LGLoTiPtShNDNXLzqTAq2y (slug 9c01fe71-58df-460e-b42f-76b80570c7fa)
+- Altın: https://claude.ai/artifact/QZK3PkxNXgnW3XNqkqoKqS (slug bec51bae-a7ea-40dc-8755-88921ff0e611)
 - `scripts/build_artifact.py` PAGES listesindeki her sayfa için artifact/<sayfa>.html üretir. Yeni sayfa: PAGES'e ekle, yeni artifact oluştur, mcp yeteneğini declare_capabilities ile tanımla.
 
 ### Likidite bölümü — sayfa özellikleri
@@ -81,6 +82,11 @@ Site sol tarafta bir menüyle bölümlere ayrılır. Her bölüm bir sayfadır.
 - **Adet / Tutar** düğmeleri tüm sayfayı değiştirir. Üstte üç kutu: karşılıksız, toplam ibraz, karşılıksız oranı (son ay).
 - Tek grafik: karşılıksız çek (adet ya da tutar) açık altın/kum rengi çubuklar (--bar), sol eksen sıfırdan + karşılıksız oranı (karşılıksız ÷ toplam ibraz × 100) koyu petrol yeşili düz çizgi (--rate), sağ eksen. Formül sayfada gösterilmez (kullanıcı isteği).
 - Tarih: ay seçici + YTD · 1Y · 3Y · 5Y · 10Y · Tümü; varsayılan 3Y. Grafik altında "Kaynak: EVDS".
+
+### Altın bölümü — sayfa özellikleri
+- Seri: TP.GOLDIMPRT.V1 (BİST altın ithalatı, kg, aylık, Temmuz 1995'ten). Fiyat: TP.ALTINPIYASA.KAP03 (BİST USD/ons, Temmuz 2018'den), kur: TP.DK.USD.A.YTL; ikisi de aylık ortalama (site: günlük verinin aylık ortalaması; artifact: EVDS frequency 5 + avg).
+- Formül (Claude önerisi, kullanıcı onayı bekliyor): USD karşılığı = kg × 32,1507466 × ons fiyatı; TL karşılığı = USD karşılığı × USD/TL. 2018-07 öncesi karşılıklar boş.
+- Üstte üç kutu: son ay ithalat (kg), USD karşılığı (milyon $), TL karşılığı (milyar TL). Grafik: aylık kg çubukları (altın rengi). Altında tablo: ay, kg, ons, ons fiyatı, USD karşılığı, USD/TL, TL karşılığı; en üstte seçili aralık toplamı. Tarih: ay seçici + YTD…Tümü, varsayılan 3Y. "Kaynak: EVDS".
 
 ### Rezerv bölümü — sayfa özellikleri
 - **Brüt / Net** düğmeleriyle iki görünüm. Üstte yalnızca son değer ve tarih; değişim pencereleri (1W/1M/YTD/1Y kutuları) ve alt bölümler kullanıcı isteğiyle kaldırıldı.
