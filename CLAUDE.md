@@ -66,7 +66,7 @@ Site sol tarafta bir menüyle bölümlere ayrılır. Her bölüm bir sayfadır.
 
 ### Rezerv bölümü — sayfa özellikleri
 - **Brüt / Net** düğmeleriyle iki görünüm. Üstte yalnızca son değer ve tarih; değişim pencereleri (1W/1M/YTD/1Y kutuları) ve alt bölümler kullanıcı isteğiyle kaldırıldı.
-- Tarih: başlangıç/bitiş seçimi + kısayollar 1M · YTD · 1Y · 3Y · 5Y · 10Y · Tümü. Varsayılan YTD. Grafiğin ilk çubuğu her zaman referans (başlangıç) haftasıdır; panel ile grafik aynı tarihleri kullanır.
+- Tarih: başlangıç/bitiş seçimi + kısayollar 1W · 1M · YTD · 1Y · 3Y · 5Y · 10Y · Tümü. Varsayılan YTD. Grafiğin ilk çubuğu her zaman referans (başlangıç) haftasıdır; panel ile grafik aynı tarihleri kullanır.
 - **Brüt görünüm:** haftalık yığılmış çubuk (altın altta, döviz koyu mavi üstte), çubuk toplamlarından geçen pürüzsüz kırmızı toplam çizgisi. Kısa aralıkta çubuklar en fazla 16 px, eksen en az ~4 ay (sağ boş kalabilir). İmleç normal ok. Tooltip: tarih, toplam, altın (%pay), döviz (%pay).
 - **Sağ panel (brüt):** seçili aralık ya da tıklanan hafta için üç dilimli pasta + dikey çizginin yanında alt alta toplanan liste: Altın fiyat etkisi + Altın miktar değişimi + Döviz değişimi = Brüt rezerv değişimi (milyar $, oran yok). Aynı haftaya ikinci tıklama seçimi kaldırır ve aralığa döner.
 - **Net görünüm:** haftalık net rezerv çubukları (pozitif koyu mavi, negatif kırmızı), sıfır çizgisi her zaman görünür. Tooltip yalnızca net rezerv. Panel: Dış varlıklardaki değişim + Döviz yükümlülüklerindeki değişim (−) = Net rezerv değişimi.

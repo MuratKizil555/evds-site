@@ -14,7 +14,7 @@ function watch(key,s,e){
 }
 function watchPx(s,e){const tag='px'+iso(s);pending.add(tag);
   mcp.watchTool(SERVER,TOOL,{series_code:'TP.ALTINPIYASA.KAP03',start_date:iso(s),end_date:iso(e),full_data:true},ev=>{
-    if(ev.type==='data'){for(const [d,v] of rowsOf(ev.result&&ev.result.payload,'TP.ALTINPIYASA.KAP03'))px.set(d,v);pxArr=[...px.entries()].sort((a,b)=>a[0]-b[0]);pending.delete(tag);renderPie()}
+    if(ev.type==='data'){for(const [d,v] of rowsOf(ev.result&&ev.result.payload,'TP.ALTINPIYASA.KAP03'))px.set(d,v);pxArr=[...px.entries()].sort((a,b)=>a[0]-b[0]);pending.delete(tag);if(!pending.size)status('Canlı EVDS verisi · güncellendi '+new Date().toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}));renderPie()}
     else if(ev.type==='error'){pending.delete(tag);status('Altın fiyatı yüklenemedi: '+String((ev.error&&(ev.error.code||ev.error.message))||'bilinmiyor'),true)}})}
 function ensure(from){
   if(!mcp||loadedFrom==null)return;
