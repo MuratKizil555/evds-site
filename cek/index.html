@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Çek · EVDS Pano</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: sakin, kesin; bir gazetenin ekonomi grafik masası (Rezerv sayfasıyla aynı dil)
+   IDEA: İsviçre tarifesi — sol kenara asılı büyük rakamlar, kalın üst çizgi
+   PICTURE: altın + döviz yığılmış alan grafiği, toplam çizgisi, hover ile haftalık değer
+   COLOUR and TYPE: beyaz zemin, siyah mürekkep, altın için okra, düşüşte sinyal kırmızısı; Archivo
+   LAYOUT: başlık + toplam, değişim şeridi, grafik, altında kırılım kartları ve tablo */
+:root{color-scheme:light dark;--bg:light-dark(#fff,#0e0e0e);--ink:light-dark(#111,#f0efec);--mut:light-dark(#6b6a66,#a3a29b);--line:light-dark(#e3e2dc,#2a2a28);--soft:light-dark(#f5f4ef,#181817);--red:light-dark(#d4002a,#ff5a6e);--up:light-dark(#0a7d3b,#3ccf7a);--gold:light-dark(#c3921b,#d9a93a);--fx:light-dark(#173a73,#4f7fd1)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Archivo,system-ui,sans-serif;overflow-x:clip;font-variant-numeric:tabular-nums}
+.band{padding:clamp(22px,4vw,48px) max(4vw,16px);max-width:1240px;margin:0}
+.shell{display:grid;grid-template-columns:220px minmax(0,1fr);min-height:100vh}
+.nav{background:var(--ink);color:var(--bg);padding:24px 16px;position:sticky;top:0;height:100vh;overflow:auto}
+.nav .brand{font-weight:800;font-stretch:112%;font-size:22px;line-height:1.1;margin:0 0 4px}
+.nav .tag{font-size:12px;opacity:.7;margin:0 0 22px}
+.nav a{display:block;color:var(--bg);text-decoration:none;padding:10px 12px;border-radius:6px;font-weight:500;min-height:44px;opacity:.85}
+.nav a:hover{opacity:1;background:color-mix(in srgb,var(--bg) 12%,transparent)}
+.nav a[aria-current=page]{opacity:1;background:var(--bg);color:var(--ink)}
+.nav .soon{display:block;padding:10px 12px;font-size:14px;opacity:.45}
+@media(max-width:860px){.shell{grid-template-columns:1fr}.nav{position:static;height:auto;display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:12px 16px}.nav .tag,.nav .soon{display:none}.nav .brand{margin:0 12px 0 0;font-size:18px}}
+.band{max-width:1240px}
+
+header.band{padding-bottom:12px}
+h1{font-size:clamp(30px,4.4vw,46px);line-height:1.05;margin:0 0 6px;font-weight:800;font-stretch:112%;text-wrap:balance}
+.sub{color:var(--mut);margin:0;font-size:15px}
+.hero{display:grid;grid-template-columns:minmax(0,1fr);gap:24px;align-items:end;margin-top:22px}
+.big{font-size:clamp(44px,7vw,76px);font-weight:800;font-stretch:112%;line-height:1}
+.big small{font-size:.38em;font-weight:500;color:var(--mut);margin-left:6px}
+.date{font-size:14px;color:var(--mut);margin-top:6px}
+.chips{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:2px solid var(--ink)}
+.chip{padding:10px 10px 4px 0}
+.chip b{display:block;font-size:13px;font-weight:500;color:var(--mut)}
+.chip .v{font-size:20px;font-weight:700;white-space:nowrap}
+.chip .p{font-size:13px;white-space:nowrap}
+.up{color:var(--up)}.dn{color:var(--red)}.fl{color:var(--mut)}
+.ctrl{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:end;padding-top:6px;padding-bottom:6px}
+.ctrl label{display:flex;flex-direction:column;font-size:13px;color:var(--mut);gap:4px}
+input[type=date]{font:16px Archivo,sans-serif;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);min-height:44px}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+.presets button{font:500 14px Archivo,sans-serif;min-height:44px;padding:0 14px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:6px;cursor:pointer}
+.presets button[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.mode{display:flex;gap:6px;margin-top:14px}.mode button{font:600 15px Archivo,sans-serif;min-height:44px;padding:0 18px;border:1px solid var(--ink);background:var(--bg);color:var(--ink);border-radius:6px;cursor:pointer}.mode button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+.legend{display:flex;gap:18px;font-size:13px;color:var(--mut);margin:4px 0 8px;flex-wrap:wrap}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.fig{position:relative;min-height:360px}.fig>svg{position:absolute;inset:0;width:100%;height:100%}
+.chartwrap{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:24px;align-items:start}
+.pie{border-top:5px solid var(--gold);padding-top:10px;font-size:14px}
+.pie h3{font-size:17px;margin:0 0 2px;font-weight:700}.pie .dt{color:var(--mut);font-size:13px;margin-bottom:8px}
+.pie svg{display:block;width:120px;height:120px;flex:none}
+.pierow{display:flex;gap:14px;align-items:center;margin:6px 0 10px}
+.side{border-left:2px solid var(--ink);padding-left:14px;flex:1}
+.side table{font-size:13px}.side td{border:0;padding:4px 0 4px 8px}.side td:first-child{padding-left:0;white-space:normal}
+.side .g{color:var(--mut);font-weight:400}.side tr.sum td{border-top:2px solid var(--ink);font-weight:700;padding-top:7px}
+@media(max-width:420px){.pierow{flex-direction:column;align-items:flex-start}}
+.pie table{font-size:13px}.pie .k{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.pie .hint{color:var(--mut);font-size:13px;margin-top:8px}
+@media(max-width:760px){.chartwrap{grid-template-columns:1fr}}
+.tip{position:absolute;pointer-events:none;background:var(--bg);border:1px solid var(--ink);padding:8px 10px;font-size:13px;line-height:1.45;white-space:nowrap;display:none;z-index:2}
+.tip b{font-weight:700}
+.rng{font-size:14px;color:var(--mut);margin-top:8px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:18px}
+.card{border-top:5px solid var(--c);padding-top:12px}
+.card h2{font-size:20px;margin:0;font-weight:700;display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.card h2 span{font-size:14px;font-weight:500;color:var(--mut)}
+.card .val{font-size:34px;font-weight:800;font-stretch:112%;margin:4px 0 2px}
+.card p{margin:0 0 10px;font-size:14px;color:var(--mut)}
+.share{height:8px;background:var(--soft);border-radius:4px;overflow:hidden;margin:6px 0 12px}.share>div{height:100%;background:var(--c)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:500;color:var(--mut);font-size:13px}
+.scroll{overflow-x:auto}
+.note{font-size:14px;color:var(--mut);border-top:2px solid var(--ink);padding-top:14px}
+.note p{margin:0 0 10px}
+.frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 4px;font-size:14px}
+.frac>span:first-child{border-bottom:1px solid currentColor;padding:0 4px}
+.frac>span:last-child{padding:0 4px}
+.math{color:var(--ink);font-size:15px;display:inline-flex;align-items:center;flex-wrap:wrap;gap:2px}
+.status{font-size:13px;color:var(--mut)}
+.status.err{color:var(--red)}
+@media(max-width:700px){.hero{grid-template-columns:1fr}.chips{grid-template-columns:repeat(2,minmax(0,1fr))}.fig{min-height:280px}}
+@media(prefers-reduced-motion:no-preference){.share>div{transition:width .4s}}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:24px;margin-top:22px}
+.tile>b{display:block;font-size:14px;font-weight:500;color:var(--mut);margin-bottom:4px}
+.ch{font-size:18px;font-weight:700;margin:0 0 4px}
+.pie td,.pie th{white-space:nowrap}
+.lk .chartwrap{grid-template-columns:minmax(0,1fr)}
+.lk .pie{max-width:none}
+.cards2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:24px;margin-top:8px}
+.cards2>div{border-top:2px solid var(--ink);padding-top:10px}.cards2 b{display:block;font-size:13px;font-weight:500;color:var(--mut)}.cards2 .v{font-size:34px;font-weight:800;font-stretch:112%;line-height:1.1}.cards2 .c{font-size:14px;margin-top:2px}
+.pick{margin:6px 0 12px}.pick b{display:block;font-size:13px;font-weight:500;color:var(--mut)}.pick span{font-size:30px;font-weight:800;font-stretch:112%}
+.hov{cursor:default}
+.tiles{grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}
+.tiles .big{font-size:clamp(30px,3.6vw,50px);white-space:nowrap}.tiles .big small{font-size:.36em}
+input[type=month]{font:16px Archivo,sans-serif;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);min-height:44px}
+.frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 4px;font-size:13px}.frac>span:first-child{border-bottom:1px solid currentColor;padding:0 4px}.frac>span:last-child{padding:0 4px}
+.math{font-size:14px;color:var(--mut);display:flex;align-items:center;flex-wrap:wrap;gap:2px}
+</style>
+</head>
+<body>
+<div class="shell"><nav class="nav" id="nav" aria-label="Bölümler"></nav><div class="main">
+<header class="band">
+  <h1>Karşılıksız çekler</h1>
+  <p class="sub">Takas odasında işlem gören çekler · aylık</p>
+  <div class="mode" id="mode" role="group" aria-label="Gösterim"><button data-m="adet" aria-pressed="true">Adet</button><button data-m="tutar" aria-pressed="false">Tutar</button></div>
+  <div class="tiles">
+    <div class="tile"><b id="l1">Karşılıksız çek</b><div class="big" id="k1">—</div><div class="date" id="d1"></div></div>
+    <div class="tile"><b id="l2">Toplam ibraz edilen çek</b><div class="big" id="k2">—</div><div class="date" id="d2"></div></div>
+    <div class="tile"><b id="l3">Karşılıksız oranı</b><div class="big" id="k3">—</div><div class="date" id="d3"></div></div>
+  </div>
+</header>
+
+<section class="band lk" style="padding-top:8px">
+  <div class="ctrl">
+    <label>Başlangıç<input type="month" id="from" min="2008-01"></label>
+    <label>Bitiş<input type="month" id="to" min="2008-01"></label>
+    <div class="presets" id="presets" role="group" aria-label="Hazır aralıklar">
+      <button data-y="ytd">YTD</button><button data-y="1">1Y</button><button data-y="3">3Y</button><button data-y="5">5Y</button><button data-y="10">10Y</button><button data-y="all">Tümü</button>
+    </div>
+  </div>
+  <h2 class="ch" id="h1">Karşılıksız çek adedi</h2>
+  <div class="fig" id="f1"><svg id="s1" role="img" aria-label="Aylık karşılıksız çek"></svg><div class="tip" id="t1"></div></div>
+  <h2 class="ch" id="h2" style="margin-top:28px">Karşılıksız çek adedinin toplam ibraz edilen çek adedine oranı</h2>
+  <p class="math" id="fx" style="margin:2px 0 6px"></p>
+  <div class="fig" id="f2" style="min-height:260px"><svg id="s2" role="img" aria-label="Karşılıksız çek oranı, yüzde"></svg><div class="tip" id="t2"></div></div>
+  <div class="rng" id="rng"></div>
+  <p class="status" id="status"></p>
+</section>
+</div></div>
+<script src="../assets/nav.js"></script>
+<script>
+{
+const $=id=>document.getElementById(id);
+const S={ta:'TP.BTO1',tt:'TP.BTO2',ka:'TP.BTO3',kt:'TP.BTO4'};
+const data={ta:new Map(),tt:new Map(),ka:new Map(),kt:new Map()};
+const MIN=Date.UTC(2008,0,1);
+const af=new Intl.NumberFormat('tr-TR',{maximumFractionDigits:0});
+const tf=new Intl.NumberFormat('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const rf=new Intl.NumberFormat('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const mf=new Intl.DateTimeFormat('tr-TR',{month:'long',year:'numeric',timeZone:'UTC'});
+const today=new Date();today.setUTCHours(0,0,0,0);
+let mode='adet',range={from:null,to:null},preset='3',cur=[];
+const ym=t=>{const d=new Date(t);return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')};
+// tutar: bin TL -> milyar TL
+const fmtV=v=>mode==='adet'?af.format(v):tf.format(v/1e6);
+const unit=()=>mode==='adet'?'adet':'milyar TL';
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim()}
+function rows(){const ds=[...data.ka.keys()].sort((a,b)=>a-b);return ds.map(d=>{const ka=data.ka.get(d),kt=data.kt.get(d),ta=data.ta.get(d),tt=data.tt.get(d);
+  return {d,ka,kt,ta,tt,ra:(ka!=null&&ta)?ka/ta*100:null,rt:(kt!=null&&tt)?kt/tt*100:null}}).filter(r=>r.ka!=null||r.kt!=null)}
+const kv=r=>mode==='adet'?r.ka:r.kt, tv=r=>mode==='adet'?r.ta:r.tt, rv=r=>mode==='adet'?r.ra:r.rt;
+function niceStep(max,n){const raw=max/n,p=10**Math.floor(Math.log10(raw)),f=raw/p;return (f<1.5?1:f<3?2:f<7?5:10)*p}
+function frame(svg){const W=svg.clientWidth,H=svg.clientHeight,narrow=W<520;return {W,H,narrow,m:{l:narrow?48:64,r:14,t:12,b:28}}}
+function xscale(view,w,ml){const n=Math.max(view.length,12);const idx=new Map(view.map((r,i)=>[r.d,i]));return {X:d=>ml+((idx.get(d)??0)+.5)/n*w}}
+function axisX(view,X,H,narrow){if(!view.length)return '';const yrs=(view[view.length-1].d-view[0].d)/(365*864e5);let g='',last=null,lastX=-1e9;const minGap=narrow?48:64;
+  const key=yrs>2?(d=>d.getUTCFullYear()):(d=>d.getUTCFullYear()*12+d.getUTCMonth());
+  const lab=yrs>2?(d=>String(d.getUTCFullYear())):(d=>d.toLocaleDateString('tr-TR',{month:'short',year:'2-digit',timeZone:'UTC'}));
+  for(const r of view){const d=new Date(r.d),k=key(d);if(k!==last){const x=X(r.d);if(x-lastX>=minGap){g+=`<text x="${x}" y="${H-8}" text-anchor="middle" font-size="12" fill="${css('--mut')}">${lab(d)}</text>`;lastX=x}last=k}}
+  return g}
+function tipHTML(r){return `<b>${mf.format(new Date(r.d))}</b><br>Karşılıksız: <b>${kv(r)!=null?fmtV(kv(r)):'—'}</b> ${unit()}<br>Toplam ibraz: ${tv(r)!=null?fmtV(tv(r)):'—'} ${unit()}<br>Oran: <b>${rv(r)!=null?'%'+rf.format(rv(r)):'—'}</b>`}
+function lineChart(id,tipId,view,val,fmtTick,color){const svg=$(id);const {W,H,narrow,m}=frame(svg);if(!W||!H)return;const v2=view.filter(r=>val(r)!=null);if(!v2.length){svg.innerHTML='';return}
+  const w=W-m.l-m.r,h=H-m.t-m.b;const {X}=xscale(view,w,m.l);
+  let lo=Math.min(...v2.map(val)),hi=Math.max(...v2.map(val));const pad=(hi-lo)*.12||Math.abs(hi)*.1||1;lo=Math.max(0,lo-pad);hi+=pad;
+  const Y=v=>m.t+(hi-v)/(hi-lo)*h;const step=niceStep(hi-lo,narrow?3:5);let g='';
+  for(let v=Math.ceil(lo/step)*step;v<=hi;v+=step)g+=`<line x1="${m.l}" x2="${m.l+w}" y1="${Y(v)}" y2="${Y(v)}" stroke="${css('--line')}"/><text x="${m.l-6}" y="${Y(v)+4}" text-anchor="end" font-size="12" fill="${css('--mut')}">${fmtTick(v)}</text>`;
+  g+=axisX(view,X,H,narrow);
+  g+=`<path d="M${v2.map(r=>X(r.d)+','+Y(val(r))).join('L')}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>`;
+  if(v2.length<=60)for(const r of v2)g+=`<circle cx="${X(r.d)}" cy="${Y(val(r))}" r="3" fill="${color}"/>`;
+  const L=v2[v2.length-1];g+=`<circle cx="${X(L.d)}" cy="${Y(val(L))}" r="5" fill="${color}" stroke="${css('--bg')}" stroke-width="2"/>`;
+  g+=`<line class="hx" y1="${m.t}" y2="${m.t+h}" stroke="${css('--ink')}" visibility="hidden"/><rect class="hov" x="${m.l}" y="${m.t}" width="${w}" height="${h}" fill="transparent"/>`;
+  svg.innerHTML=g;const tip=$(tipId),hov=svg.querySelector('.hov'),hx=svg.querySelector('.hx');
+  hov.addEventListener('mousemove',e=>{const p=e.clientX-svg.getBoundingClientRect().left;let b=v2[0],bd=1e9;for(const q of v2){const dd=Math.abs(X(q.d)-p);if(dd<bd){bd=dd;b=q}}const bx=X(b.d);
+    hx.setAttribute('x1',bx);hx.setAttribute('x2',bx);hx.setAttribute('visibility','visible');tip.innerHTML=tipHTML(b);tip.style.display='block';const tw=tip.offsetWidth;tip.style.left=(bx+12+tw>W?Math.max(bx-tw-12,0):bx+12)+'px';tip.style.top='12px'});
+  hov.addEventListener('mouseleave',()=>{tip.style.display='none';hx.setAttribute('visibility','hidden')})}
+function draw(view){
+  lineChart('s1','t1',view,kv,v=>mode==='adet'?af.format(v):tf.format(v/1e6).replace(/,00$/,''),css('--red'));
+  lineChart('s2','t2',view,rv,v=>'%'+(Math.round(v*100)/100).toLocaleString('tr-TR'),css('--fx'))}
+function refAt(arr,t){let lo=0,hi=arr.length-1,ans=null;while(lo<=hi){const m=(lo+hi)>>1;if(arr[m].d<=t){ans=arr[m];lo=m+1}else hi=m-1}return ans}
+function render(){const all=rows();if(!all.length)return;const L=all[all.length-1];const lm=mf.format(new Date(L.d));
+  const A=mode==='adet';
+  $('l1').textContent='Karşılıksız çek '+(A?'adedi':'tutarı');$('k1').innerHTML='';$('k1').append(fmtV(kv(L))+' ');const s1=document.createElement('small');s1.textContent=unit();$('k1').append(s1);
+  $('l2').textContent='Toplam ibraz edilen çek '+(A?'adedi':'tutarı');$('k2').innerHTML='';$('k2').append(fmtV(tv(L))+' ');const s2=document.createElement('small');s2.textContent=unit();$('k2').append(s2);
+  $('l3').textContent='Karşılıksız oranı ('+(A?'adet':'tutar')+')';$('k3').textContent=rv(L)!=null?'%'+rf.format(rv(L)):'—';
+  for(const k of ['d1','d2','d3'])$(k).textContent='Son veri: '+lm;
+  $('h1').textContent='Karşılıksız çek '+(A?'adedi':'tutarı (milyar TL)');
+  $('h2').textContent='Karşılıksız çek '+(A?'adedinin toplam ibraz edilen çek adedine':'tutarının toplam ibraz edilen çek tutarına')+' oranı';
+  $('fx').innerHTML=`Oran (%) = <span class="frac"><span>Karşılıksız çek ${A?'adedi':'tutarı'}</span><span>Toplam ibraz edilen çek ${A?'adedi':'tutarı'}</span></span> × 100`;
+  const from=range.from??(L.d-3*365*864e5),to=range.to??L.d;const view=all.filter(r=>r.d>=from&&r.d<=to);cur=view;draw(view);
+  $('rng').textContent=view.length?'Kaynak: EVDS':'Seçili aralıkta veri yok.'}
+const ro=new ResizeObserver(()=>draw(cur));ro.observe($('s1'));ro.observe($('s2'));
+for(const b of document.querySelectorAll('#mode button'))b.addEventListener('click',()=>{mode=b.dataset.m;for(const x of document.querySelectorAll('#mode button'))x.setAttribute('aria-pressed',String(x===b));render()});
+function setPreset(y){preset=y;for(const b of document.querySelectorAll('#presets button'))b.setAttribute('aria-pressed',String(b.dataset.y===y));
+  const all=rows();const end=all.length?all[all.length-1].d:today.getTime();const d=new Date(end);
+  if(y==='all')d.setTime(MIN);else if(y==='ytd')d.setTime(Date.UTC(d.getUTCFullYear(),0,1));else d.setUTCFullYear(d.getUTCFullYear()-(+y));
+  const f=d.getTime();range={from:f,to:end};$('from').value=ym(f);$('to').value=ym(end);ensure(f);render()}
+for(const b of document.querySelectorAll('#presets button'))b.addEventListener('click',()=>setPreset(b.dataset.y));
+function onInput(){const P=v=>{const m=/^(\d{4})-(\d{2})$/.exec(v);return m?Date.UTC(+m[1],+m[2]-1,1):NaN};const f=P($('from').value),t=P($('to').value);if(isNaN(f)||isNaN(t))return;preset=null;for(const b of document.querySelectorAll('#presets button'))b.setAttribute('aria-pressed','false');range={from:Math.min(f,t),to:Math.max(f,t)};ensure(range.from);render()}
+$('from').addEventListener('change',onInput);$('to').addEventListener('change',onInput);
+/*LOADER-START*/
+function status(t,err){const s=$('status');s.textContent=t;s.className='status'+(err?' err':'')}
+function ensure(){}
+(async()=>{
+  status('Veriler yükleniyor…');
+  try{
+    const r=await fetch('../data/cek.json',{cache:'no-cache'});if(!r.ok)throw new Error('HTTP '+r.status);
+    const j=await r.json();const P=x=>Date.parse(x+'T00:00:00Z');
+    for(const k of ['ta','tt','ka','kt'])for(const [d,v] of (j.series[k]||[]))data[k].set(P(d),v);
+    status('Veriler her iş günü otomatik güncellenir · son güncelleme '+new Date(j.updated).toLocaleString('tr-TR',{dateStyle:'short',timeStyle:'short'}));
+    setPreset('3');
+  }catch(e){status('Veri dosyası henüz hazır değil ya da okunamadı ('+String(e.message||e)+').',true)}
+})();
+/*LOADER-END*/
+}
+</script>
+</body>
+</html>

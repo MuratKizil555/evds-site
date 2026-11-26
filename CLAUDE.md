@@ -67,6 +67,7 @@ Site sol tarafta bir menüyle bölümlere ayrılır. Her bölüm bir sayfadır.
 ### Artifact'ler (sayfa başına bir tane; menü bağlantıları birbirine gider)
 - Rezerv: https://claude.ai/artifact/A7nL8d26HsA2VptJCKMDS5 (slug 49d4a565-13ab-48c7-a104-0f98a491fc3e)
 - Likidite: https://claude.ai/artifact/JMkyzuvXxi3eBdbDdC3nE6 (slug 8c915683-5b5f-4dee-ae3a-4a0a19e90ccb)
+- Çek: https://claude.ai/artifact/LGLoTiPtShNDNXLzqTAq2y (slug 9c01fe71-58df-460e-b42f-76b80570c7fa)
 - `scripts/build_artifact.py` PAGES listesindeki her sayfa için artifact/<sayfa>.html üretir. Yeni sayfa: PAGES'e ekle, yeni artifact oluştur, mcp yeteneğini declare_capabilities ile tanımla.
 
 ### Likidite bölümü — sayfa özellikleri
@@ -74,6 +75,12 @@ Site sol tarafta bir menüyle bölümlere ayrılır. Her bölüm bir sayfadır.
 - Üstte net fonlama ve AOFM kutuları; tarih kontrolleri Rezerv'le aynı (1W…Tümü, varsayılan YTD).
 - Grafik 1: yalnızca net fonlama çubukları (pozitif koyu mavi, negatif kırmızı), sıfır çizgisi. Grafik 2: AOFM düz çizgi grafiği.
 - Grafikler tam genişlikte; x ekseni yalnızca veri olan iş günlerinden oluşur (tatil/hafta sonu boşluğu yok), çubuk en fazla 18 px. Tooltip: tarih, net fonlama, AOFM. Özet paneli ve gün seçimi kullanıcı isteğiyle kaldırıldı. Grafiklerin altında kaynak olarak yalnızca "Kaynak: EVDS" yazar.
+
+### Çek bölümü — sayfa özellikleri
+- Seriler (bie_btocek, aylık, 2008'den): TP.BTO1 toplam ibraz edilen çek adedi, TP.BTO2 toplam ibraz edilen çek tutarı (bin TL), TP.BTO3 karşılıksız çek adedi, TP.BTO4 karşılıksız çek tutarı (bin TL). Tutarlar milyar TL gösterilir (÷10⁶), nominal.
+- **Adet / Tutar** düğmeleri tüm sayfayı değiştirir. Üstte üç kutu: karşılıksız, toplam ibraz, karşılıksız oranı (son ay).
+- Grafik 1: karşılıksız çek (adet ya da tutar) çizgi. Grafik 2: oran çizgisi; formül sayfada dikey kesirle: Oran (%) = karşılıksız ÷ toplam ibraz × 100 (kullanıcının tanımı).
+- Tarih: ay seçici + YTD · 1Y · 3Y · 5Y · 10Y · Tümü; varsayılan 3Y. Grafik altında "Kaynak: EVDS".
 
 ### Rezerv bölümü — sayfa özellikleri
 - **Brüt / Net** düğmeleriyle iki görünüm. Üstte yalnızca son değer ve tarih; değişim pencereleri (1W/1M/YTD/1Y kutuları) ve alt bölümler kullanıcı isteğiyle kaldırıldı.
