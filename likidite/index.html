@@ -207,7 +207,7 @@ function render(){const all=rows();if(!all.length)return;const L=all[all.length-
   const lr=[...all].reverse().find(r=>r.r!=null);if(lr){$('kR').textContent=pc(lr.r);$('kRd').textContent='Son veri: '+df.format(new Date(lr.d))}
   const from=range.from??(L.d-365*864e5),to=range.to??L.d;const a0=refAt(all,from)||all.find(r=>r.d>=from);
   const view=all.filter(r=>r.d>=(a0?a0.d:from)&&r.d<=to);cur=view;sel=null;draw1(view);draw2(view);panel(view);
-  $('rng').textContent=view.length?`Grafik: ${df.format(new Date(view[0].d))} – ${df.format(new Date(view[view.length-1].d))} · ilk gün başlangıç (referans) günüdür · Kaynak: TCMB EVDS, ${Object.values(S).join(', ')}`:'Seçili aralıkta veri yok.'}
+  $('rng').textContent=view.length?'Kaynak: EVDS':'Seçili aralıkta veri yok.'}
 const ro=new ResizeObserver(()=>{draw1(cur);draw2(cur)});ro.observe($('s1'));ro.observe($('s2'));
 function setPreset(y){preset=y;for(const b of document.querySelectorAll('#presets button'))b.setAttribute('aria-pressed',String(b.dataset.y===y));
   const all=rows();const end=all.length?all[all.length-1].d:today.getTime();const d=new Date(end);
@@ -225,7 +225,7 @@ function ensure(){}
     const r=await fetch('../data/likidite.json',{cache:'no-cache'});if(!r.ok)throw new Error('HTTP '+r.status);
     const j=await r.json();const P=x=>Date.parse(x+'T00:00:00Z');
     for(const k of ['A','B','N','R'])for(const [d,v] of (j.series[k]||[]))data[k].set(P(d),v);
-    status('Kaynak: TCMB EVDS · veriler her iş günü otomatik güncellenir · son güncelleme '+new Date(j.updated).toLocaleString('tr-TR',{dateStyle:'short',timeStyle:'short'}));
+    status('Veriler her iş günü otomatik güncellenir · son güncelleme '+new Date(j.updated).toLocaleString('tr-TR',{dateStyle:'short',timeStyle:'short'}));
     setPreset('ytd');
   }catch(e){status('Veri dosyası henüz hazır değil ya da okunamadı ('+String(e.message||e)+').',true)}
 })();
