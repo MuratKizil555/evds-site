@@ -128,6 +128,7 @@ Site sol tarafta bir menüyle bölümlere ayrılır. Her bölüm bir sayfadır.
   - Öneri (onay bekliyor): "Özel sektör borçlanma" bölümü — toplam stok kutuları (TL, $), ihraççıya göre yığılmış çubuk, vade dağılımı.
 
 ### Açık konular
+- **Rezerv kaynakları bölümü yarım kaldı:** kullanıcı 27.11.2026'da "doğru yapmadın, tekrar döneceğiz" dedi; neyin yanlış olduğu henüz konuşulmadı. Döndüğümüzde önce kullanıcının beklentisi sorulacak, sonra değişiklik yapılacak. O zamana kadar sayfaya dokunulmaz.
 - Basındaki net rezerv rakamları bizimkinden ~4,8 milyar $ yüksek (yöntem yayımlanmamış). Hakan Kara ve "507" hesaplarının yöntemi araştırılacak; kullanıcı onaylamadan formül değiştirilmez.
 - Bu aşamada sayfada veri yorumu yapılmaz, yalnızca görselleştirilir.
 - Kur – yıllıklandırma: kullanıcı haftalık değişimin yıllıklandırılmasını istedi (uygulandı); daha da pürüzsüz istenirse aylık pencere ya da hareketli ortalama seçenekleri var.
