@@ -91,8 +91,8 @@ Site sol tarafta bir menüyle bölümlere ayrılır. Her bölüm bir sayfadır.
 
 ### Kur bölümü — sayfa özellikleri
 - Seri: TP.DK.USD.A.YTL (USD/TRY, TCMB döviz alış, günlük; sitede 1987'den). Üstte iki kutu: son kur; önceki iş gününe göre fark (büyük: bps = kur farkı × 10.000, ör. 50,5866 − 50,5531 = 335 bps; altında % ve yıllıklandırılmış %; pozitif yeşil, negatif kırmızı).
-- Üstte **Kur / Yıllıklandırılmış değişim** düğmeleri tek grafiği değiştirir. Kur: USD/TRY çizgi (iş günü ekseni). Yıllıklandırılmış: yıllıklandırılmış günlük değişim, çizgi, sıfır çizgisi.
-- Formül (Claude önerisi, onay bekliyor): günlük değişim % = (K_t ÷ K_önceki − 1) × 100; bps = (K_t − K_önceki) × 10.000 (kullanıcı tanımı); yıllıklandırılmış % = günlük % × 365 ÷ takvim günü farkı (basit, bileşiksiz). Bileşik sürüm kullanıcı tarafından yanlış bulundu.
+- Üstte **Kur / Yıllıklandırılmış değişim** düğmeleri tek grafiği değiştirir. Kur: USD/TRY çizgi (iş günü ekseni). Yıllıklandırılmış: her gün için son 1 haftalık değişimin yıllıklandırılmış hali (kayan pencere), çizgi, sıfır çizgisi.
+- Formül (Claude önerisi, onay bekliyor): günlük değişim % = (K_t ÷ K_önceki − 1) × 100; bps = (K_t − K_önceki) × 10.000 (kullanıcı tanımı); yıllıklandırılmış % = haftalık değişim % (K_t ÷ 7 gün önceki ya da öncesindeki son iş günü kuru − 1) × 365 ÷ aradaki takvim günü (basit). Kullanıcı isteği: günlük yerine haftalık (günlük grafik kötüydü); bileşik sürüm de yanlış bulundu.
 - Eksen %1–%99 dilimiyle sınırlanır; dışarıda kalan değerler eksen sınırında kesilir, tooltip'te tam değer.
 - Tarih: EVDS tarihleri kullanılır (TCMB kuru bir gün önce 15:30'da ilan edilir; EVDS'te uygulanacağı günün tarihini taşır). Kullanıcı ilan gününü kastedebilir.
 - Tarih kontrolleri: 1W…Tümü, varsayılan YTD. "Kaynak: EVDS".
@@ -112,5 +112,5 @@ Site sol tarafta bir menüyle bölümlere ayrılır. Her bölüm bir sayfadır.
 ### Açık konular
 - Basındaki net rezerv rakamları bizimkinden ~4,8 milyar $ yüksek (yöntem yayımlanmamış). Hakan Kara ve "507" hesaplarının yöntemi araştırılacak; kullanıcı onaylamadan formül değiştirilmez.
 - Bu aşamada sayfada veri yorumu yapılmaz, yalnızca görselleştirilir.
-- **Kur – yıllıklandırılmış değişim grafiği:** kullanıcı günlük yıllıklandırmanın doğru olmadığını, grafiğin daha pürüzsüz olması gerektiğini düşünüyor. Bir sonraki oturumda ele alınacak (seçenekler: hareketli ortalama, haftalık/aylık pencere üzerinden yıllıklandırma, 252 iş günü). Yöntem kullanıcıyla netleşmeden değiştirilmez.
+- Kur – yıllıklandırma: kullanıcı haftalık değişimin yıllıklandırılmasını istedi (uygulandı); daha da pürüzsüz istenirse aylık pencere ya da hareketli ortalama seçenekleri var.
 - Altın ve Kur formülleri (Claude önerisi) henüz açıkça onaylanmadı.
