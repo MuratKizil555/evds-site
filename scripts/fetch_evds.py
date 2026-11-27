@@ -39,15 +39,11 @@ def monthly_avg(daily):
 
 # Seri kodları (skill: onaylanmış formüller)
 WEEKLY = {"tot": "TP.AB.TOPLAM", "gold": "TP.AB.C1", "fx": "TP.AB.C2"}  # haftalık (Cuma), milyon $
-DAILY_TO_WEEKLY = {"A02": "TP.AB.A02", "A10": "TP.AB.A10", "A11": "TP.AB.A11", "A13": "TP.AB.A13", "A14": "TP.AB.A14", "usd": "TP.DK.USD.A.YTL"}
-# TCMB taraflı swap stokları (milyon $, iş günü, 04.01.2021'den)
-SWAP = {"swA": "TP.SWAPTEKTAR.TOTALSTOKALIMYONLU", "swS": "TP.SWAPTEKTAR.TOTALSTOKSATIMYONLU"}
-SWAP_START = dt.date(2021, 1, 1)  # iş günü -> haftanın son değeri, Cuma etiketli
+DAILY_TO_WEEKLY = {"A02": "TP.AB.A02", "A10": "TP.AB.A10", "usd": "TP.DK.USD.A.YTL"}  # iş günü -> haftanın son değeri, Cuma etiketli
 DAILY = {"px": "TP.ALTINPIYASA.KAP03"}  # BİST altın USD/ons, iş günü
 
 START = dt.date(1987, 12, 1)
 PX_START = dt.date(2018, 7, 1)
-D_START = dt.date(2015, 1, 1)
 
 
 def fetch(code, start, end):
@@ -129,12 +125,6 @@ def main():
         data[k] = {d: v for d, v in w.items() if d <= today}
     for k, code in DAILY.items():
         data[k] = series(code, PX_START, end)
-    # Net rezerv günlük görünümü: iş günü değerleri (2015'ten)
-    for k, code in SWAP.items():
-        raw_daily[k] = series(code, SWAP_START, end)
-        data[k] = {d: v for d, v in to_friday_weekly(raw_daily[k]).items() if d <= today}
-    for k in list(DAILY_TO_WEEKLY) + list(SWAP):
-        data['d' + k] = {d: v for d, v in raw_daily[k].items() if D_START <= d <= today}
     for k, v in data.items():
         if not v:
             raise RuntimeError(f"{k} boş geldi")

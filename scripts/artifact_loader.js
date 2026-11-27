@@ -16,14 +16,6 @@ function watchPx(s,e){const tag='px'+iso(s);pending.add(tag);
   mcp.watchTool(SERVER,TOOL,{series_code:'TP.ALTINPIYASA.KAP03',start_date:iso(s),end_date:iso(e),full_data:true},ev=>{
     if(ev.type==='data'){for(const [d,v] of rowsOf(ev.result&&ev.result.payload,'TP.ALTINPIYASA.KAP03'))px.set(d,v);pxArr=[...px.entries()].sort((a,b)=>a[0]-b[0]);pending.delete(tag);if(!pending.size)status('Canlı EVDS verisi · güncellendi '+new Date().toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}));renderPie()}
     else if(ev.type==='error'){pending.delete(tag);status('Altın fiyatı yüklenemedi: '+String((ev.error&&(ev.error.code||ev.error.message))||'bilinmiyor'),true)}})}
-// Net rezerv günlük görünümü: analitik bilanço kalemleri, USD ve swap stokları iş günü değerleri 2015'ten, 2 yıllık parçalarla (EVDS ~1000 gözlem sınırı)
-let dLoaded=false;
-function ensureD(){if(!mcp||dLoaded)return;dLoaded=true;const DK={};for(const k in NS)DK['d'+k]=NS[k];
-  for(let y=2015;y<=today.getUTCFullYear();y+=2){const s=new Date(Date.UTC(y,0,1)),e0=new Date(Date.UTC(y+1,11,31)),e=e0>today?today:e0;
-    for(const k in DK){const tag=k+y;pending.add(tag);status('EVDS\'ten günlük veri yükleniyor…');
-      mcp.watchTool(SERVER,TOOL,{series_code:DK[k],start_date:iso(s),end_date:iso(e),full_data:true},ev=>{
-        if(ev.type==='data'){for(const [d,v] of rowsOf(ev.result&&ev.result.payload,DK[k]))data[k].set(d,v);pending.delete(tag);if(!pending.size)status('Canlı EVDS verisi · güncellendi '+new Date().toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}));if(mode==='net'&&freq==='d'){if(preset)setPreset(preset);else render()}}
-        else if(ev.type==='error'){pending.delete(tag);status('Günlük veri yüklenemedi: '+String((ev.error&&(ev.error.code||ev.error.message))||'bilinmiyor'),true)}})}}}
 function ensure(from){
   if(!mcp||loadedFrom==null)return;
   while(loadedFrom>from&&loadedFrom>MIN.getTime()){const e=new Date(loadedFrom-864e5);const s=new Date(loadedFrom);s.setUTCFullYear(s.getUTCFullYear()-15);const st=s<MIN?MIN:s;for(const k in ALL)watch(k,st,e);loadedFrom=st.getTime()}
