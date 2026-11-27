@@ -104,6 +104,7 @@ th{font-weight:500;color:var(--mut);font-size:13px}
 .note2{font-size:13px;color:var(--mut);margin:6px 0 0}
 .rbox{margin-left:auto;border:1px solid var(--line);border-radius:6px;padding:8px 14px;min-width:190px;text-align:right}.rbox b{display:block;font-size:12px;font-weight:500;color:var(--mut)}.rbox .v{font-size:22px;font-weight:800;font-stretch:112%;line-height:1.2}.rbox .v.up{color:var(--up)}.rbox .v.dn{color:var(--red)}.rbox .p{font-size:14px;font-weight:600}.rbox .p.up{color:var(--up)}.rbox .p.dn{color:var(--red)}
 @media(max-width:760px){.rbox{margin-left:0;text-align:left}}
+:root{--olive:light-dark(#5f6f1f,#a9c14e)}
 </style>
 </head>
 <body>
@@ -124,7 +125,7 @@ th{font-weight:500;color:var(--mut);font-size:13px}
       <button data-y="w">1W</button><button data-y="m">1M</button><button data-y="ytd">YTD</button><button data-y="1">1Y</button><button data-y="3">3Y</button><button data-y="5">5Y</button><button data-y="all">Tümü</button>
     </div>
   </div>
-  <div class="legend"><span><i style="background:var(--fx)"></i>BIST swap stoku</span></div>
+  <div class="legend"><span><i style="background:var(--olive)"></i>BIST swap stoku</span></div>
   <div class="chartwrap"><div class="fig" id="fig" style="min-height:380px"><svg id="svg" role="img" aria-label="BIST swap stoku çubuk grafiği"></svg><div class="tip" id="tip"></div></div><aside class="pie" id="pie" aria-live="polite"><h3>Stok değişimi</h3><div class="dt">Veri yükleniyor…</div></aside></div>
   <div class="rng" id="rng"></div>
   <p class="status" id="status"></p>
@@ -166,7 +167,7 @@ function draw(view){cur=view;const W=svg.clientWidth,H=svg.clientHeight;if(!W||!
   const spanY=(v[v.length-1].d-v[0].d)/(365*864e5);const key=spanY>2?(d=>d.getUTCFullYear()):spanY>.25?(d=>d.getUTCFullYear()*12+d.getUTCMonth()):(d=>Math.floor((d.getTime()/864e5+3)/7));
   const lab=spanY>2?(d=>String(d.getUTCFullYear())):spanY>.25?(d=>d.toLocaleDateString('tr-TR',{month:'short',year:'2-digit',timeZone:'UTC'})):(d=>d.toLocaleDateString('tr-TR',{day:'2-digit',month:'short',timeZone:'UTC'}));
   let last=null,lx=-1e9;const gap=narrow?48:64;for(const r of v){const d=new Date(r.d),k=key(d);if(k!==last){const x=X(r.d);if(last!==null&&x-lx>=gap){g+=`<text x="${x}" y="${H-8}" text-anchor="middle" font-size="12" fill="${css('--mut')}">${lab(d)}</text>`;lx=x}else if(last===null)lx=x-gap*.6;last=k}}
-  const bw=Math.min(18,Math.max(1,w/n*.75)),c=css('--fx');
+  const bw=Math.min(18,Math.max(1,w/n*.75)),c=css('--olive');
   for(const r of v){if(r.v<=0)continue;const y1=Y(r.v);g+=`<rect x="${X(r.d)-bw/2}" y="${y1}" width="${bw}" height="${Math.max(.5,Y(0)-y1)}" fill="${c}"/>`}
   const sr=selOff?null:v.find(r=>r.d===sel);if(sr){const y1=Y(Math.max(0,sr.v));g+=`<rect x="${X(sr.d)-bw/2-2}" y="${y1-2}" width="${bw+4}" height="${Y(0)-y1+4}" fill="none" stroke="${css('--ink')}" stroke-width="2"/>`}
   g+=`<line x1="${m.l}" x2="${m.l+w}" y1="${Y(0)}" y2="${Y(0)}" stroke="${css('--ink')}" stroke-width="1.5"/>`;
