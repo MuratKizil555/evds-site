@@ -33,7 +33,7 @@ jobs:
       - name: Site klasörünü hazırla
         run: |
           mkdir -p _site
-          cp -r index.html assets rezerv likidite cek altin kur data _site/
+          cp -r index.html assets rezerv kaynak likidite cek altin kur data _site/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site

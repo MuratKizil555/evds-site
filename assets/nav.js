@@ -2,6 +2,7 @@
   // Sitenin sol menüsü. Yeni bölüm eklemek için SECTIONS listesine bir satır ekle.
   const SECTIONS = [
     { id: 'rezerv', title: 'Rezerv', href: '../rezerv/' },
+    { id: 'kaynak', title: 'Rezerv kaynakları', href: '../kaynak/' },
     { id: 'likidite', title: 'Likidite', href: '../likidite/' },
     { id: 'cek', title: 'Çek', href: '../cek/' },
     { id: 'altin', title: 'Altın', href: '../altin/' },

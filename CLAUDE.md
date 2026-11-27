@@ -70,7 +70,16 @@ Site sol tarafta bir menüyle bölümlere ayrılır. Her bölüm bir sayfadır.
 - Çek: https://claude.ai/artifact/LGLoTiPtShNDNXLzqTAq2y (slug 9c01fe71-58df-460e-b42f-76b80570c7fa)
 - Altın: https://claude.ai/artifact/QZK3PkxNXgnW3XNqkqoKqS (slug bec51bae-a7ea-40dc-8755-88921ff0e611)
 - Kur: https://claude.ai/artifact/1fnytfkzMBygSbW9XF5Teq (slug 056a9998-6a00-4908-b34c-29a9e42e70fa)
+- Rezerv kaynakları: https://claude.ai/artifact/HtQNrqBE3Bre4y2wbVEa5h (slug 88bf8eae-2be7-4968-af65-eae9db0151bc)
 - `scripts/build_artifact.py` PAGES listesindeki her sayfa için artifact/<sayfa>.html üretir. Yeni sayfa: PAGES'e ekle, yeni artifact oluştur, mcp yeteneğini declare_capabilities ile tanımla.
+
+### Rezerv kaynakları bölümü — sayfa özellikleri (menüde Rezerv'in altında; Rezerv sayfasına dokunulmaz — kullanıcı isteği)
+- Başlık: "Net rezerv değişimi ve kaynakları" (kullanıcı onaylı; "döviz alım-satımı" denmez, TCMB bunu yayımlamaz).
+- Düğmeler: **Günlük / Haftalık** (varsayılan günlük; haftalık = haftanın son iş günü) ve **Swap dahil / Swap hariç** (varsayılan dahil). Üstte iki kutu: net rezerv, önceki güne/haftaya göre değişim.
+- Grafik: önceki gözleme göre net rezerv değişimi çubukları (artış koyu mavi, azalış kırmızı), x ekseni yalnızca veri olan günler. Tarih: 1W…Tümü, varsayılan YTD; veri 2015'ten.
+- Sağ panel: seçili aralık ya da tıklanan çubuk için pasta + liste: Dış varlıklar (A02) + Dış yükümlülükler (−, A11) + Kamu ve diğer döviz mevduatı (−, A13) + Bankalar döviz mevduatı (−, A14) [+ swap hariçte: Alım yönlü swap stoku (−) + Satım yönlü swap stoku (+)] = Net rezerv değişimi. Kalemler aynı günün kuruyla $'a çevrilir. Denklik A10 = A11 + A13 + A14 (kontrol edildi, ±1 bin TL). İkinci tıklama aralığa döner.
+- Swap hariç (Claude önerisi, onay bekliyor): net rezerv − (TP.SWAPTEKTAR.TOTALSTOKALIMYONLU − TP.SWAPTEKTAR.TOTALSTOKSATIMYONLU), milyon $, bie_swaptektarf (TCMB taraflı swap işlemleri, iş günü, 04.01.2021'den; yurt içi piyasa swapları, merkez bankalarıyla swaplar dahil değil).
+- Veri: site data/kaynak.json (fetch_evds.py); artifact scripts/artifact_loader_kaynak.js (önce son 2 yıl, eski tarih seçilince 2 yıllık parçalarla 2015'e kadar).
 
 ### Likidite bölümü — sayfa özellikleri
 - Seriler (bie_apifon, iş günü, milyon TL / %): TP.APIFON1.TOP (fonlama), TP.APIFON2.TOP (sterilizasyon), TP.APIFON3 (net fonlama = A−B, TCMB yayımlar), TP.APIFON4 (AOFM). 2011'den beri.

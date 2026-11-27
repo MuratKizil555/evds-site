@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rezerv kaynakları · EVDS Pano</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: sakin, kesin; bir gazetenin ekonomi grafik masası (Rezerv sayfasıyla aynı dil)
+   IDEA: İsviçre tarifesi — sol kenara asılı büyük rakamlar, kalın üst çizgi
+   PICTURE: altın + döviz yığılmış alan grafiği, toplam çizgisi, hover ile haftalık değer
+   COLOUR and TYPE: beyaz zemin, siyah mürekkep, altın için okra, düşüşte sinyal kırmızısı; Archivo
+   LAYOUT: başlık + toplam, değişim şeridi, grafik, altında kırılım kartları ve tablo */
+:root{color-scheme:light dark;--bg:light-dark(#fff,#0e0e0e);--ink:light-dark(#111,#f0efec);--mut:light-dark(#6b6a66,#a3a29b);--line:light-dark(#e3e2dc,#2a2a28);--soft:light-dark(#f5f4ef,#181817);--red:light-dark(#d4002a,#ff5a6e);--up:light-dark(#0a7d3b,#3ccf7a);--gold:light-dark(#c3921b,#d9a93a);--fx:light-dark(#173a73,#4f7fd1)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Archivo,system-ui,sans-serif;overflow-x:clip;font-variant-numeric:tabular-nums}
+.band{padding:clamp(22px,4vw,48px) max(4vw,16px);max-width:1240px;margin:0}
+.shell{display:grid;grid-template-columns:220px minmax(0,1fr);min-height:100vh}
+.nav{background:var(--ink);color:var(--bg);padding:24px 16px;position:sticky;top:0;height:100vh;overflow:auto}
+.nav .brand{font-weight:800;font-stretch:112%;font-size:22px;line-height:1.1;margin:0 0 4px}
+.nav .tag{font-size:12px;opacity:.7;margin:0 0 22px}
+.nav a{display:block;color:var(--bg);text-decoration:none;padding:10px 12px;border-radius:6px;font-weight:500;min-height:44px;opacity:.85}
+.nav a:hover{opacity:1;background:color-mix(in srgb,var(--bg) 12%,transparent)}
+.nav a[aria-current=page]{opacity:1;background:var(--bg);color:var(--ink)}
+.nav .soon{display:block;padding:10px 12px;font-size:14px;opacity:.45}
+@media(max-width:860px){.shell{grid-template-columns:1fr}.nav{position:static;height:auto;display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:12px 16px}.nav .tag,.nav .soon{display:none}.nav .brand{margin:0 12px 0 0;font-size:18px}}
+.band{max-width:1240px}
+
+header.band{padding-bottom:12px}
+h1{font-size:clamp(30px,4.4vw,46px);line-height:1.05;margin:0 0 6px;font-weight:800;font-stretch:112%;text-wrap:balance}
+.sub{color:var(--mut);margin:0;font-size:15px}
+.hero{display:grid;grid-template-columns:minmax(0,1fr);gap:24px;align-items:end;margin-top:22px}
+.big{font-size:clamp(44px,7vw,76px);font-weight:800;font-stretch:112%;line-height:1}
+.big small{font-size:.38em;font-weight:500;color:var(--mut);margin-left:6px}
+.date{font-size:14px;color:var(--mut);margin-top:6px}
+.chips{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:2px solid var(--ink)}
+.chip{padding:10px 10px 4px 0}
+.chip b{display:block;font-size:13px;font-weight:500;color:var(--mut)}
+.chip .v{font-size:20px;font-weight:700;white-space:nowrap}
+.chip .p{font-size:13px;white-space:nowrap}
+.up{color:var(--up)}.dn{color:var(--red)}.fl{color:var(--mut)}
+.ctrl{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:end;padding-top:6px;padding-bottom:6px}
+.ctrl label{display:flex;flex-direction:column;font-size:13px;color:var(--mut);gap:4px}
+input[type=date]{font:16px Archivo,sans-serif;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);min-height:44px}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+.presets button{font:500 14px Archivo,sans-serif;min-height:44px;padding:0 14px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:6px;cursor:pointer}
+.presets button[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.mode{display:flex;gap:6px;margin-top:14px}.mode button{font:600 15px Archivo,sans-serif;min-height:44px;padding:0 18px;border:1px solid var(--ink);background:var(--bg);color:var(--ink);border-radius:6px;cursor:pointer}.mode button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+.legend{display:flex;gap:18px;font-size:13px;color:var(--mut);margin:4px 0 8px;flex-wrap:wrap}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.fig{position:relative;min-height:360px}.fig>svg{position:absolute;inset:0;width:100%;height:100%}
+.chartwrap{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:24px;align-items:start}
+.pie{border-top:5px solid var(--gold);padding-top:10px;font-size:14px}
+.pie h3{font-size:17px;margin:0 0 2px;font-weight:700}.pie .dt{color:var(--mut);font-size:13px;margin-bottom:8px}
+.pie svg{display:block;width:120px;height:120px;flex:none}
+.pierow{display:flex;gap:14px;align-items:center;margin:6px 0 10px}
+.side{border-left:2px solid var(--ink);padding-left:14px;flex:1}
+.side table{font-size:13px}.side td{border:0;padding:4px 0 4px 8px}.side td:first-child{padding-left:0;white-space:normal}
+.side .g{color:var(--mut);font-weight:400}.side tr.sum td{border-top:2px solid var(--ink);font-weight:700;padding-top:7px}
+@media(max-width:420px){.pierow{flex-direction:column;align-items:flex-start}}
+.pie table{font-size:13px}.pie .k{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.pie .hint{color:var(--mut);font-size:13px;margin-top:8px}
+@media(max-width:760px){.chartwrap{grid-template-columns:1fr}}
+.tip{position:absolute;pointer-events:none;background:var(--bg);border:1px solid var(--ink);padding:8px 10px;font-size:13px;line-height:1.45;white-space:nowrap;display:none;z-index:2}
+.tip b{font-weight:700}
+.rng{font-size:14px;color:var(--mut);margin-top:8px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:18px}
+.card{border-top:5px solid var(--c);padding-top:12px}
+.card h2{font-size:20px;margin:0;font-weight:700;display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.card h2 span{font-size:14px;font-weight:500;color:var(--mut)}
+.card .val{font-size:34px;font-weight:800;font-stretch:112%;margin:4px 0 2px}
+.card p{margin:0 0 10px;font-size:14px;color:var(--mut)}
+.share{height:8px;background:var(--soft);border-radius:4px;overflow:hidden;margin:6px 0 12px}.share>div{height:100%;background:var(--c)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:500;color:var(--mut);font-size:13px}
+.scroll{overflow-x:auto}
+.note{font-size:14px;color:var(--mut);border-top:2px solid var(--ink);padding-top:14px}
+.note p{margin:0 0 10px}
+.frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 4px;font-size:14px}
+.frac>span:first-child{border-bottom:1px solid currentColor;padding:0 4px}
+.frac>span:last-child{padding:0 4px}
+.math{color:var(--ink);font-size:15px;display:inline-flex;align-items:center;flex-wrap:wrap;gap:2px}
+.status{font-size:13px;color:var(--mut)}
+.status.err{color:var(--red)}
+@media(max-width:700px){.hero{grid-template-columns:1fr}.chips{grid-template-columns:repeat(2,minmax(0,1fr))}.fig{min-height:280px}}
+@media(prefers-reduced-motion:no-preference){.share>div{transition:width .4s}}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:24px;margin-top:22px}
+.tile>b{display:block;font-size:14px;font-weight:500;color:var(--mut);margin-bottom:4px}
+.ch{font-size:18px;font-weight:700;margin:0 0 4px}
+.pie td,.pie th{white-space:nowrap}
+.lk .chartwrap{grid-template-columns:minmax(0,1fr)}
+.lk .pie{max-width:none}
+.cards2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:24px;margin-top:8px}
+.cards2>div{border-top:2px solid var(--ink);padding-top:10px}.cards2 b{display:block;font-size:13px;font-weight:500;color:var(--mut)}.cards2 .v{font-size:34px;font-weight:800;font-stretch:112%;line-height:1.1}.cards2 .c{font-size:14px;margin-top:2px}
+.pick{margin:6px 0 12px}.pick b{display:block;font-size:13px;font-weight:500;color:var(--mut)}.pick span{font-size:30px;font-weight:800;font-stretch:112%}
+.hov{cursor:default}
+.ghost{font:600 15px Archivo,sans-serif;min-height:44px;padding:0 18px;border:1px solid var(--ink);background:var(--bg);color:var(--ink);border-radius:6px;cursor:pointer;margin-top:18px}.ghost[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+.pct{font-size:18px;font-weight:600;margin-top:2px}.big.dn{color:var(--red)}.big.up{color:var(--up)}
+.note2{font-size:13px;color:var(--mut);margin:6px 0 0}
+.rbox{margin-left:auto;border:1px solid var(--line);border-radius:6px;padding:8px 14px;min-width:190px;text-align:right}.rbox b{display:block;font-size:12px;font-weight:500;color:var(--mut)}.rbox .v{font-size:22px;font-weight:800;font-stretch:112%;line-height:1.2}.rbox .v.up{color:var(--up)}.rbox .v.dn{color:var(--red)}.rbox .p{font-size:14px;font-weight:600}.rbox .p.up{color:var(--up)}.rbox .p.dn{color:var(--red)}
+@media(max-width:760px){.rbox{margin-left:0;text-align:left}}
+</style>
+</head>
+<body>
+<div class="shell"><nav class="nav" id="nav" aria-label="Bölümler"></nav><div class="main">
+<header class="band">
+  <h1>Net rezerv değişimi ve kaynakları</h1>
+  <p class="sub" id="sub"></p>
+  <div style="display:flex;flex-wrap:wrap;gap:0 24px">
+  <div class="mode" id="freq" role="group" aria-label="Sıklık"><button data-f="d" aria-pressed="true">Günlük</button><button data-f="w" aria-pressed="false">Haftalık</button></div>
+  <div class="mode" id="swp" role="group" aria-label="Swap"><button data-s="0" aria-pressed="true">Swap dahil</button><button data-s="1" aria-pressed="false">Swap hariç</button></div>
+  </div>
+  <div class="tiles">
+    <div class="tile"><b id="t1b">Net rezerv</b><div class="big" id="k1">—</div><div class="date" id="d1"></div></div>
+    <div class="tile"><b id="t2b">Önceki iş gününe göre değişim</b><div class="big" id="k2">—</div><div class="date" id="d2"></div></div>
+  </div>
+</header>
+<section class="band" style="padding-top:8px">
+  <div class="ctrl">
+    <label>Başlangıç<input type="date" id="from" min="2015-01-01"></label>
+    <label>Bitiş<input type="date" id="to" min="2015-01-01"></label>
+    <div class="presets" id="presets" role="group" aria-label="Hazır aralıklar">
+      <button data-y="w">1W</button><button data-y="m">1M</button><button data-y="ytd">YTD</button><button data-y="1">1Y</button><button data-y="3">3Y</button><button data-y="5">5Y</button><button data-y="10">10Y</button><button data-y="all">Tümü</button>
+    </div>
+  </div>
+  <div class="legend"><span><i style="background:var(--fx)"></i>Artış</span><span><i style="background:var(--red)"></i>Azalış</span></div>
+  <div class="chartwrap"><div class="fig" id="fig" style="min-height:380px"><svg id="svg" role="img" aria-label="Net rezerv değişimi çubuk grafiği"></svg><div class="tip" id="tip"></div></div><aside class="pie" id="pie" aria-live="polite"><h3>Net rezerv değişimi ve kaynakları</h3><div class="dt">Veri yükleniyor…</div></aside></div>
+  <div class="rng" id="rng"></div>
+  <p class="status" id="status"></p>
+</section>
+</div></div>
+<script>
+{
+  // Sitenin sol menüsü. Yeni bölüm eklemek için SECTIONS listesine bir satır ekle.
+  const SECTIONS = [
+    { id: 'rezerv', title: 'Rezerv', href: 'https://claude.ai/artifact/A7nL8d26HsA2VptJCKMDS5' },
+    { id: 'kaynak', title: 'Rezerv kaynakları', href: 'https://claude.ai/artifact/HtQNrqBE3Bre4y2wbVEa5h' },
+    { id: 'likidite', title: 'Likidite', href: 'https://claude.ai/artifact/JMkyzuvXxi3eBdbDdC3nE6' },
+    { id: 'cek', title: 'Çek', href: 'https://claude.ai/artifact/LGLoTiPtShNDNXLzqTAq2y' },
+    { id: 'altin', title: 'Altın', href: 'https://claude.ai/artifact/QZK3PkxNXgnW3XNqkqoKqS' },
+    { id: 'kur', title: 'Kur', href: 'https://claude.ai/artifact/1fnytfkzMBygSbW9XF5Teq' }
+  ];
+  const SOON = ['Fiyatlar', 'Parasal', 'Dış istatistikler'];
+  const here = location.pathname.split('/').filter(Boolean);
+  const nav = document.getElementById('nav');
+  if (nav) {
+    const brand = document.createElement('p'); brand.className = 'brand'; brand.textContent = 'EVDS Pano';
+    const tag = document.createElement('p'); tag.className = 'tag'; tag.textContent = 'TCMB istatistikleri, her gün güncel';
+    nav.append(brand, tag);
+    for (const s of SECTIONS) {
+      const a = document.createElement('a'); a.href = s.href; a.textContent = s.title;
+      if (s.id === 'kaynak') a.setAttribute('aria-current', 'page');
+      nav.append(a);
+    }
+    for (const t of SOON) { const sp = document.createElement('span'); sp.className = 'soon'; sp.textContent = t + ' · yakında'; nav.append(sp); }
+  }
+}
+
+</script>
+<script>
+{
+const $=id=>document.getElementById(id);
+const NS={A02:'TP.AB.A02',A10:'TP.AB.A10',A11:'TP.AB.A11',A13:'TP.AB.A13',A14:'TP.AB.A14',usd:'TP.DK.USD.A.YTL',swA:'TP.SWAPTEKTAR.TOTALSTOKALIMYONLU',swS:'TP.SWAPTEKTAR.TOTALSTOKSATIMYONLU'};
+const data={};for(const k in NS)data[k]=new Map();
+const MIN=Date.UTC(2015,0,1);
+const nf=new Intl.NumberFormat('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const df=new Intl.DateTimeFormat('tr-TR',{day:'2-digit',month:'2-digit',year:'numeric',timeZone:'UTC'});
+const mr=v=>nf.format(v/1000);const sign=v=>(v>0?'+':v<0?'−':'');const sv=v=>v==null?'—':sign(v)+mr(Math.abs(v));const lv=v=>v==null?'—':(v<0?'−':'')+mr(Math.abs(v));
+const iso=d=>new Date(d).toISOString().slice(0,10);
+const today=new Date();today.setUTCHours(0,0,0,0);
+let freq='d',swx=false,range={from:null,to:null},preset='ytd',cur=[],sel=null,selOff=true,rA=null,rB=null;
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim()}
+function niceStep(max,n){const raw=max/n,p=10**Math.floor(Math.log10(raw)),f=raw/p;return (f<1.5?1:f<3?2:f<7?5:10)*p}
+function refAt(arr,t){let lo=0,hi=arr.length-1,ans=null;while(lo<=hi){const m=(lo+hi)>>1;if(arr[m].d<=t){ans=arr[m];lo=m+1}else hi=m-1}return ans}
+function arc(cx,cy,R,ri,a0,a1){const p=(r,a)=>[cx+r*Math.sin(a),cy-r*Math.cos(a)];const lg=a1-a0>Math.PI?1:0;const [x0,y0]=p(R,a0),[x1,y1]=p(R,a1),[x2,y2]=p(ri,a1),[x3,y3]=p(ri,a0);return `M${x0},${y0}A${R},${R} 0 ${lg} 1 ${x1},${y1}L${x2},${y2}A${ri},${ri} 0 ${lg} 0 ${x3},${y3}Z`}
+
+// Net rezerv (milyon $) = (A02 − A10) / (USD/TRY × 1000); A10 = A11 + A13 + A14 (analitik bilanço denkliği)
+// Kalemler aynı günün TCMB USD alış kuruyla dolara çevrilir; değişim = son − başlangıç
+// Swap hariç = net rezerv − (alım yönlü swap stoku − satım yönlü swap stoku); swap stokları milyon $, 04.01.2021'den
+// Haftalık görünüm: her haftanın son iş günü (Cuma etiketi)
+function rows(){const out=[];const ds=[...data.A02.keys()].sort((a,b)=>a-b);
+  for(const d of ds){if(d>today.getTime())continue;const A=data.A02.get(d),L=data.A10.get(d),k=data.usd.get(d);if(A==null||L==null||!k)continue;
+    const u=v=>v==null?null:v/k/1000;const sa=data.swA.get(d),ss=data.swS.get(d);
+    out.push({d,a:u(A),l:u(L),x:u(data.A11.get(d)),h:u(data.A13.get(d)),b:u(data.A14.get(d)),sa:sa??null,ss:ss??null})}
+  let r=out;if(freq==='w'){const m=new Map();for(const q of r){const dt=new Date(q.d),fri=q.d+((5-dt.getUTCDay()+7)%7)*864e5;m.set(fri,{...q,d:fri,od:q.d})}r=[...m.values()]}
+  if(swx)r=r.filter(q=>q.sa!=null&&q.ss!=null);
+  let p=null;for(const q of r){q.n=q.a-q.l-(swx?q.sa-q.ss:0);q.dn=p==null?null:q.n-p;p=q.n}
+  return r}
+function subTxt(){return 'TCMB analitik bilançosu: dış varlıklar eksi toplam döviz yükümlülükleri'+(swx?', eksi TCMB taraflı net swap stoku':'')+' · '+(freq==='d'?'iş günü':'haftalık (haftanın son iş günü)')+' · milyar ABD doları'}
+function render(){const all=rows();$('sub').textContent=subTxt();
+  if(!all.length){$('k1').textContent='—';$('k2').textContent='—';svg.innerHTML='';$('pie').innerHTML='<h3>Net rezerv değişimi ve kaynakları</h3><div class="dt">Veri yükleniyor…</div>';return}
+  const L=all[all.length-1];$('t1b').textContent='Net rezerv'+(swx?' (swap hariç)':'');$('k1').textContent=lv(L.n);$('d1').textContent='Son veri: '+df.format(new Date(L.od??L.d));
+  $('t2b').textContent=freq==='d'?'Önceki iş gününe göre değişim':'Önceki haftaya göre değişim';$('k2').textContent=sv(L.dn);$('k2').className='big '+(L.dn>0?'up':L.dn<0?'dn':'');
+  const P=all[all.length-2];$('d2').textContent=P?df.format(new Date(P.od??P.d))+' → '+df.format(new Date(L.od??L.d)):'';
+  const from=range.from??(L.d-365*864e5),to=range.to??L.d;const a0=refAt(all,from)||all.find(r=>r.d>=from);
+  const view=all.filter(r=>r.d>=(a0?a0.d:from)&&r.d<=to+6*864e5);rA=view[0];rB=view[view.length-1];draw(view);renderPie();
+  $('rng').textContent=view.length>1?`Değişim: ${df.format(new Date(rA.od??rA.d))} – ${df.format(new Date(rB.od??rB.d))} · başlangıç, seçilen tarihteki ya da öncesindeki son ${freq==='d'?'iş günü':'hafta'} · Kaynak: EVDS`:'Seçili aralıkta veri yok.'}
+const svg=$('svg'),tip=$('tip');
+// Çubuk = önceki gözleme göre net rezerv değişimi; x ekseni yalnızca veri olan günler/haftalar
+function draw(view){cur=view;const W=svg.clientWidth,H=svg.clientHeight;if(!W||!H)return;const v=view.slice(1);if(!v.length){svg.innerHTML='';return}
+  const narrow=W<520,m={l:narrow?34:48,r:12,t:10,b:28},w=W-m.l-m.r,h=H-m.t-m.b;
+  const n=Math.max(v.length,22),idx=new Map(v.map((r,i)=>[r.d,i]));const X=d=>m.l+((idx.get(d)??0)+.5)/n*w;
+  let ymax=Math.max(0,...v.map(r=>r.dn)),ymin=Math.min(0,...v.map(r=>r.dn));const sp=(ymax-ymin)||1000;ymax+=sp*.08;ymin-=sp*.08;
+  const Y=x=>m.t+(ymax-x)/(ymax-ymin)*h;const st=niceStep((ymax-ymin)/1000,narrow?4:6)*1000;let g='';
+  const fl=x=>{const r=Math.round(x/100)/10;return r.toLocaleString('tr-TR')};
+  for(let x=Math.ceil(ymin/st)*st;x<=ymax;x+=st)g+=`<line x1="${m.l}" x2="${m.l+w}" y1="${Y(x)}" y2="${Y(x)}" stroke="${css('--line')}"/><text x="${m.l-6}" y="${Y(x)+4}" text-anchor="end" font-size="12" fill="${css('--mut')}">${fl(x)}</text>`;
+  const spanY=(v[v.length-1].d-v[0].d)/(365*864e5);const key=spanY>2?(d=>d.getUTCFullYear()):spanY>.25?(d=>d.getUTCFullYear()*12+d.getUTCMonth()):(d=>Math.floor((d.getTime()/864e5+3)/7));
+  const lab=spanY>2?(d=>String(d.getUTCFullYear())):spanY>.25?(d=>d.toLocaleDateString('tr-TR',{month:'short',year:'2-digit',timeZone:'UTC'})):(d=>d.toLocaleDateString('tr-TR',{day:'2-digit',month:'short',timeZone:'UTC'}));
+  let last=null,lx=-1e9;const gap=narrow?48:64;for(const r of v){const d=new Date(r.d),k=key(d);if(k!==last){const x=X(r.d);if(last!==null&&x-lx>=gap){g+=`<text x="${x}" y="${H-8}" text-anchor="middle" font-size="12" fill="${css('--mut')}">${lab(d)}</text>`;lx=x}else if(last===null)lx=x-gap*.6;last=k}}
+  const bw=Math.min(18,Math.max(1,w/n*.75)),pc=css('--fx'),nc=css('--red');
+  for(const r of v){const y1=Y(Math.max(0,r.dn)),y2=Y(Math.min(0,r.dn));g+=`<rect x="${X(r.d)-bw/2}" y="${y1}" width="${bw}" height="${Math.max(.5,y2-y1)}" fill="${r.dn<0?nc:pc}"/>`}
+  const sr=selOff?null:v.find(r=>r.d===sel);if(sr){const y1=Y(Math.max(0,sr.dn)),y2=Y(Math.min(0,sr.dn));g+=`<rect x="${X(sr.d)-bw/2-2}" y="${y1-2}" width="${bw+4}" height="${y2-y1+4}" fill="none" stroke="${css('--ink')}" stroke-width="2"/>`}
+  g+=`<line x1="${m.l}" x2="${m.l+w}" y1="${Y(0)}" y2="${Y(0)}" stroke="${css('--ink')}" stroke-width="1.5"/>`;
+  g+=`<line id="hx" y1="${m.t}" y2="${m.t+h}" stroke="${css('--ink')}" visibility="hidden"/><rect x="${m.l}" y="${m.t}" width="${w}" height="${h}" fill="transparent" id="hov" style="cursor:default"/>`;
+  svg.innerHTML=g;const hov=svg.querySelector('#hov'),hx=svg.querySelector('#hx');
+  const near=e=>{const rc=svg.getBoundingClientRect();const p=(e.touches?e.touches[0].clientX:e.clientX)-rc.left;let b=v[0],bd=1e9;for(const q of v){const dd=Math.abs(X(q.d)-p);if(dd<bd){bd=dd;b=q}}return b};
+  hov.addEventListener('mousemove',e=>{const b=near(e),bx=X(b.d);hx.setAttribute('x1',bx);hx.setAttribute('x2',bx);hx.setAttribute('visibility','visible');
+    tip.innerHTML=`<b>${df.format(new Date(b.od??b.d))}</b><br>Değişim: <b>${sv(b.dn)}</b> mr $<br>Net rezerv${swx?' (swap hariç)':''}: ${lv(b.n)} mr $<br><span style="color:var(--mut)">Tıklayın: kaynaklar</span>`;tip.style.display='block';const tw=tip.offsetWidth;tip.style.left=(bx+12+tw>W?Math.max(bx-tw-12,0):bx+12)+'px';tip.style.top='12px'});
+  hov.addEventListener('mouseleave',()=>{tip.style.display='none';hx.setAttribute('visibility','hidden')});
+  hov.addEventListener('click',e=>{const b=near(e);if(sel===b.d&&!selOff){selOff=true;sel=null}else{sel=b.d;selOff=false}renderPie();draw(cur)})}
+function renderPie(){const el=$('pie'),all=rows();if(!all.length)return;let A,B,title;const U=freq==='d'?['Günlük','gün','güne','günü']:['Haftalık','hafta','haftaya','haftayı'];
+  if(!selOff&&sel!=null){const i=all.findIndex(r=>r.d===sel);if(i<1){el.innerHTML=`<h3>${U[0]} değişim ve kaynakları</h3><div class="dt">Önceki ${U[1]} verisi yok.</div>`;return}A=all[i-1];B=all[i];title=U[0]+' değişim ve kaynakları'}
+  else{A=rA;B=rB;title='Seçili aralıkta değişim ve kaynakları'}
+  if(!A||!B||A.d===B.d){el.innerHTML=`<h3>${title}</h3><div class="dt">Karşılaştırılacak ${U[1]} yok.</div>`;return}
+  const dv=(k,s)=>A[k]==null||B[k]==null?null:s*(B[k]-A[k]);
+  const parts=[['Dış varlıklar',dv('a',1),css('--fx')],['Dış yükümlülükler (−)',dv('x',-1),'#8a8f98'],['Kamu ve diğer döviz mevduatı (−)',dv('h',-1),css('--gold')],['Bankalar döviz mevduatı (−)',dv('b',-1),'#2f8f83']];
+  if(swx)parts.push(['Alım yönlü swap stoku (−)',dv('sa',-1),'#b0563b'],['Satım yönlü swap stoku (+)',dv('ss',1),'#7b5ea7']);
+  const dn=B.n-A.n,P=parts.filter(q=>q[1]!=null);const den=P.reduce((t,q)=>t+Math.abs(q[1]),0);const R=86,ri=52,c=90;let pie='',ang=0;
+  if(!den)pie=`<circle cx="${c}" cy="${c}" r="${(R+ri)/2}" fill="none" stroke="${css('--line')}" stroke-width="${R-ri}"/>`;
+  else for(const [n,v,k] of P){const sh=Math.abs(v)/den;if(sh<=0)continue;if(sh>=.9999){pie+=`<circle cx="${c}" cy="${c}" r="${(R+ri)/2}" fill="none" stroke="${k}" stroke-width="${R-ri}"/>`;break}const a1=ang+sh*2*Math.PI;pie+=`<path d="${arc(c,c,R,ri,ang,a1)}" fill="${k}"/>`;ang=a1}
+  pie+=`<text x="${c}" y="${c-4}" text-anchor="middle" font-size="12" fill="${css('--mut')}">Net</text><text x="${c}" y="${c+16}" text-anchor="middle" font-size="17" font-weight="700" fill="${css('--ink')}">${sv(dn)}</text>`;
+  const li=(n,v,k)=>`<tr><td><span class="k" style="background:${k}"></span>${n}</td><td class="${v==null?'fl':v>0?'up':v<0?'dn':'fl'}">${sv(v)}</td></tr>`;
+  const side=`<div class="side"><table>${parts.map(q=>li(...q)).join('')}<tr class="sum"><td>Net rezerv değişimi${swx?' (swap hariç)':''}</td><td class="${dn>0?'up':dn<0?'dn':'fl'}">${sv(dn)}</td></tr></table><div class="g" style="font-size:12px;margin-top:4px">milyar $</div></div>`;
+  const swr=swx?`<tr><td>Net swap stoku (alım − satım)</td><td>${lv(A.sa-A.ss)}</td><td>${lv(B.sa-B.ss)}</td></tr>`:'';
+  el.innerHTML=`<h3>${title}</h3><div class="dt">${df.format(new Date(A.od??A.d))} → ${df.format(new Date(B.od??B.d))}</div><div class="pierow"><svg viewBox="0 0 180 180" role="img" aria-label="Net rezerv değişiminin kaynaklarına ayrışması">${pie}</svg>${side}</div>
+  <table style="margin-top:8px"><tr><th></th><th>Başlangıç</th><th>Son</th></tr><tr><td>Dış varlıklar</td><td>${lv(A.a)}</td><td>${lv(B.a)}</td></tr><tr><td>Döviz yükümlülükleri</td><td>${lv(A.l)}</td><td>${lv(B.l)}</td></tr>${swr}<tr><td><b>Net rezerv${swx?' (swap hariç)':''}</b></td><td><b>${lv(A.n)}</b></td><td><b>${lv(B.n)}</b></td></tr></table>
+  <p class="hint">${selOff?`Bir ${U[2]} tıklayarak yalnızca o ${U[3]} görebilirsiniz.`:`Aralığa dönmek için aynı ${U[2]} tekrar tıklayın.`} Yükümlülük ve alım yönlü swap stoku artışı net rezervi azalttığı için eksi işaretle gösterilir. TCMB günlük döviz alım-satımını yayımlamaz; dış varlıklardaki değişim parite, altın fiyatı ve Hazine işlemlerini de içerir.${swx?' Swap verisi TCMB\'nin yurt içi piyasa swaplarını kapsar; merkez bankalarıyla yapılan swaplar dahil değildir ve 04.01.2021 öncesi yoktur.':''}</p>`}
+const ro=new ResizeObserver(()=>draw(cur));ro.observe(svg);
+function setPreset(y){preset=y;for(const b of document.querySelectorAll('#presets button'))b.setAttribute('aria-pressed',String(b.dataset.y===y));
+  const all=rows();const end=all.length?all[all.length-1].d:today.getTime();const d=new Date(end);
+  if(y==='all')d.setTime(MIN);else if(y==='ytd')d.setTime(Date.UTC(d.getUTCFullYear(),0,1));else if(y==='w')d.setUTCDate(d.getUTCDate()-7);else if(y==='m')d.setUTCMonth(d.getUTCMonth()-1);else d.setUTCFullYear(d.getUTCFullYear()-(+y));
+  const f=Math.max(d.getTime(),MIN);selOff=true;sel=null;range={from:f,to:end};$('from').value=iso(f);$('to').value=iso(end);ensure(f);render()}
+for(const b of document.querySelectorAll('#presets button'))b.addEventListener('click',()=>setPreset(b.dataset.y));
+function onInput(){const f=Date.parse($('from').value),t=Date.parse($('to').value);if(isNaN(f)||isNaN(t))return;preset=null;for(const b of document.querySelectorAll('#presets button'))b.setAttribute('aria-pressed','false');selOff=true;sel=null;range={from:Math.min(f,t),to:Math.max(f,t)};ensure(range.from);render()}
+$('from').addEventListener('change',onInput);$('to').addEventListener('change',onInput);
+for(const b of document.querySelectorAll('#freq button'))b.addEventListener('click',()=>{freq=b.dataset.f;for(const x of document.querySelectorAll('#freq button'))x.setAttribute('aria-pressed',String(x===b));tip.style.display='none';selOff=true;sel=null;if(preset)setPreset(preset);else render()});
+for(const b of document.querySelectorAll('#swp button'))b.addEventListener('click',()=>{swx=b.dataset.s==='1';for(const x of document.querySelectorAll('#swp button'))x.setAttribute('aria-pressed',String(x===b));tip.style.display='none';selOff=true;sel=null;if(preset)setPreset(preset);else render()});
+// Claude artifact sürümünün veri yükleyicisi: veriyi görüntüleyenin TCMB EVDS bağlantısından canlı çeker.
+// İş günü serileri 2 yıllık parçalarla (EVDS ~1000 gözlem sınırı); önce son 2 yıl, eski tarih seçilince 2015'e kadar geriye.
+const SERVER='TCMB MCP',TOOL='get_series_data';let mcp=null,loadedFrom=null;const pending=new Set();
+const SWAP0=Date.UTC(2021,0,1);
+function status(t,err){const s=$('status');s.textContent=t;s.className='status'+(err?' err':'')}
+function pdate(s){let m=/^(\d{2})-(\d{2})-(\d{4})$/.exec(s);if(m)return Date.UTC(+m[3],+m[2]-1,+m[1]);m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s);return m?Date.UTC(+m[1],+m[2]-1,+m[3]):null}
+function strs(x,o=[]){if(typeof x==='string')o.push(x);else if(Array.isArray(x))x.forEach(y=>strs(y,o));else if(x&&typeof x==='object')Object.values(x).forEach(y=>strs(y,o));return o}
+function rowsOf(p){const r=[];for(const s of strs(p))for(const line of s.split('\n')){const c=line.split('|').map(z=>z.trim()).filter(z=>z!=='');if(c.length<2)continue;const d=pdate(c[0]),n=parseFloat(c[c.length-1]);if(d!=null&&isFinite(n))r.push([d,n])}return r}
+let first=true;
+function watch(k,s,e){const tag=k+s;pending.add(tag);
+  mcp.watchTool(SERVER,TOOL,{series_code:NS[k],start_date:iso(s),end_date:iso(e),full_data:true},ev=>{
+    if(ev.type==='data'){for(const [d,v] of rowsOf(ev.result&&ev.result.payload))data[k].set(d,v);pending.delete(tag);
+      status(pending.size?'EVDS\'ten yükleniyor…':'Canlı EVDS verisi · güncellendi '+new Date().toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}));
+      if(first&&!pending.size){first=false;setPreset(preset??'ytd')}else if(!first)render()}
+    else if(ev.type==='error'){pending.delete(tag);status('EVDS bağlantısında hata: '+String((ev.error&&(ev.error.code||ev.error.message))||'bilinmiyor'),true)}})}
+function chunk(s,e){for(const k in NS){if((k==='swA'||k==='swS')&&e<SWAP0)continue;watch(k,Math.max(s,k[0]==='s'?SWAP0:s),e)}}
+function ensure(from){if(!mcp||loadedFrom==null)return;while(loadedFrom>from&&loadedFrom>MIN){const e=loadedFrom-864e5;const s=new Date(loadedFrom);s.setUTCFullYear(s.getUTCFullYear()-2);const st=Math.max(s.getTime(),MIN);chunk(st,e);loadedFrom=st}}
+(async()=>{status('EVDS bağlantısı kuruluyor…');try{mcp=await window.claude.use('mcp')}catch(e){mcp=null}
+  if(!mcp){status('Bu sayfa verileri sizin TCMB EVDS bağlantınızla çeker. Bağlantı bu görünümde kullanılamıyor.',true);return}
+  const s=new Date(today);s.setUTCFullYear(s.getUTCFullYear()-2);chunk(s.getTime(),today.getTime());loadedFrom=s.getTime()})();
+}
+</script>
+</body>
+</html>
