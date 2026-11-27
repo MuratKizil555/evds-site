@@ -148,6 +148,7 @@ input[type=month]{font:16px Archivo,sans-serif;padding:8px 10px;border:1px solid
     { id: 'rezerv', title: 'Rezerv', href: 'https://claude.ai/artifact/A7nL8d26HsA2VptJCKMDS5' },
     { id: 'kaynak', title: 'Rezerv kaynakları', href: 'https://claude.ai/artifact/HtQNrqBE3Bre4y2wbVEa5h' },
     { id: 'swap', title: 'Swap', href: 'https://claude.ai/artifact/QAB9sc1EuL6LyJSzPJeb7g' },
+    { id: 'swap-bist', title: 'BIST Swap Piyasası', href: 'https://claude.ai/artifact/MQ3tBnXDdCKRH8P4Zk45SZ', sub: true },
     { id: 'likidite', title: 'Likidite', href: 'https://claude.ai/artifact/JMkyzuvXxi3eBdbDdC3nE6' },
     { id: 'cek', title: 'Çek', href: 'https://claude.ai/artifact/LGLoTiPtShNDNXLzqTAq2y' },
     { id: 'altin', title: 'Altın', href: 'https://claude.ai/artifact/QZK3PkxNXgnW3XNqkqoKqS' },
@@ -161,7 +162,8 @@ input[type=month]{font:16px Archivo,sans-serif;padding:8px 10px;border:1px solid
     const tag = document.createElement('p'); tag.className = 'tag'; tag.textContent = 'TCMB istatistikleri, her gün güncel';
     nav.append(brand, tag);
     for (const s of SECTIONS) {
-      const a = document.createElement('a'); a.href = s.href; a.textContent = s.title;
+      const a = document.createElement('a'); a.href = s.href; a.textContent = s.sub ? '· ' + s.title : s.title;
+      if (s.sub) { a.style.paddingLeft = '26px'; a.style.fontSize = '14px'; a.style.minHeight = '36px'; a.style.paddingTop = '7px'; a.style.paddingBottom = '7px'; }
       if (s.id === 'altin') a.setAttribute('aria-current', 'page');
       nav.append(a);
     }

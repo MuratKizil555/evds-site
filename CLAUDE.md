@@ -72,6 +72,7 @@ Site sol tarafta bir menüyle bölümlere ayrılır. Her bölüm bir sayfadır.
 - Kur: https://claude.ai/artifact/1fnytfkzMBygSbW9XF5Teq (slug 056a9998-6a00-4908-b34c-29a9e42e70fa)
 - Rezerv kaynakları: https://claude.ai/artifact/HtQNrqBE3Bre4y2wbVEa5h (slug 88bf8eae-2be7-4968-af65-eae9db0151bc)
 - Swap: https://claude.ai/artifact/QAB9sc1EuL6LyJSzPJeb7g (slug bb8a23dd-bb4e-4d84-b1ff-3955788871a3) — şimdilik yer tutucu, veri yok; mcp yeteneği veri eklenince declare_capabilities ile tanımlanacak (PAGES'te yükleyici None).
+- BIST Swap Piyasası (Swap'ın alt başlığı): https://claude.ai/artifact/MQ3tBnXDdCKRH8P4Zk45SZ (slug a52ea804-d249-4f2c-97d3-810fe3876f42) — yer tutucu.
 - `scripts/build_artifact.py` PAGES listesindeki her sayfa için artifact/<sayfa>.html üretir. Yeni sayfa: PAGES'e ekle, yeni artifact oluştur, mcp yeteneğini declare_capabilities ile tanımla.
 
 ### Rezerv kaynakları bölümü — sayfa özellikleri (menüde Rezerv'in altında; Rezerv sayfasına dokunulmaz — kullanıcı isteği)
@@ -83,6 +84,7 @@ Site sol tarafta bir menüyle bölümlere ayrılır. Her bölüm bir sayfadır.
 - Veri: site data/kaynak.json (fetch_evds.py); artifact scripts/artifact_loader_kaynak.js (önce son 2 yıl, eski tarih seçilince 2 yıllık parçalarla 2015'e kadar).
 
 ### Swap bölümü (27.11.2026'da kullanıcı isteğiyle açıldı; menüde Rezerv kaynakları'nın altında)
+- Menüde alt başlıklar: nav.js SECTIONS satırında `sub: true` → girintili, "· " önekli, küçük yazı. İlk alt başlık: **BIST Swap Piyasası** (sayfa swap-bist/, yer tutucu; aday seriler TP.SWAPTEKTAR.BISWAPUSDTUTAR işlem, TP.SWAPTEKTAR.BISWAPSTOKUSDTUTAR stok).
 - Şimdilik yalnızca başlık ("Bu bölüm hazırlanıyor"). İçerik kullanıcıyla seri listesi gözden geçirildikten sonra eklenecek.
 - Aday veri grubu: bie_swaptektarf (TCMB Taraflı Swap İşlemleri, iş günü, milyon $, 04.01.2021'den, 22 seri): döviz karşılığı TL swap piyasası (akım/stok), BIST swap piyasası, TL karşılığı altın swap piyasası, döviz karşılığı TL swap geleneksel ihaleleri (alım/satım yönlü), miktar ihaleleri, altın karşılığı TL swap ihaleleri, döviz karşılığı altın swap (net alım), toplam stok alım/satım yönlü (TOTALSTOKALIMYONLU / TOTALSTOKSATIMYONLU), depo işlemine dönenler.
 
