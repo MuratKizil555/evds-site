@@ -110,6 +110,14 @@ Site sol tarafta bir menüyle bölümlere ayrılır. Her bölüm bir sayfadır.
 - Fiyat etkisi = Σ Q_{k−1}(P_k − P_{k−1}); miktar değişimi = Σ (Q_k − Q_{k−1})P_k — haftalık hesaplanıp toplanır (zincirleme). "Miktar değişimi" net satış/alım, altın swapları, altın zorunlu karşılıkları vb. kapsar; "rezerv satışı" denmez.
 - Net rezerv (PDF s.48): $$\frac{\text{TP.AB.A02} - \text{TP.AB.A10}}{\text{TP.DK.USD.A.YTL} \times 1000}$$ milyon $; seriler haftalık (frequency 3, aggregation last → Cuma).
 
+### Seri kataloğu — bulunan ama henüz kullanılmayan veri grupları
+- **Özel sektör borçlanma senetleri** (EVDS Tüm Seriler: Parasal ve Finansal İstatistikler → Menkul Kıymet İstatistikleri (TCMB) → Genel Yönetim Dışı Sektörlerin Yurt İçi / Yurt Dışı Borçlanma Senedi İhraçları). Haftalık (Cuma, aggregation last), Eylül 2020'den.
+  - Yurt içi (milyon TL): bie_yiosbayazdeg (yazılı değer/stok), bie_yiosbapiydeg (piyasa değeri), bie_yiosbavade (vade dağılımı).
+  - Yurt dışı / Eurobond (milyon $): bie_ydosbayazdeg, bie_ydosbapiydeg, bie_ydosbavade (vade ve para dağılımı).
+  - ÇSY (yeşil/sürdürülebilir, Eylül 2023'ten): bie_yiesgyazdeg (yurt içi, milyon TL), bie_ydesgyazdeg (yurt dışı, milyon $).
+  - Yazılı değer gruplarında 80'er seri; kırılım ihraççı (finansal olmayan / finansal kuruluşlar) × elinde tutan sektör. Toplamlar: TP.YIOSBAYAZDEG.S11T, TP.YDOSBAYAZDEG.S11T. Seri listesinin tamamı kullanıcıyla henüz gözden geçirilmedi.
+  - Öneri (onay bekliyor): "Özel sektör borçlanma" bölümü — toplam stok kutuları (TL, $), ihraççıya göre yığılmış çubuk, vade dağılımı.
+
 ### Açık konular
 - Basındaki net rezerv rakamları bizimkinden ~4,8 milyar $ yüksek (yöntem yayımlanmamış). Hakan Kara ve "507" hesaplarının yöntemi araştırılacak; kullanıcı onaylamadan formül değiştirilmez.
 - Bu aşamada sayfada veri yorumu yapılmaz, yalnızca görselleştirilir.
