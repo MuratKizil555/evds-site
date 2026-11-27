@@ -128,8 +128,8 @@ th{font-weight:500;color:var(--mut);font-size:13px}
       <button data-y="w">1W</button><button data-y="m">1M</button><button data-y="ytd">YTD</button><button data-y="1">1Y</button><button data-y="3">3Y</button><button data-y="5">5Y</button><button data-y="10">10Y</button><button data-y="all">Tümü</button>
     </div>
   </div>
-  <div class="legend"><span><i style="background:var(--fx)"></i>Artış</span><span><i style="background:var(--red)"></i>Azalış</span></div>
-  <div class="chartwrap"><div class="fig" id="fig" style="min-height:380px"><svg id="svg" role="img" aria-label="Net rezerv değişimi çubuk grafiği"></svg><div class="tip" id="tip"></div></div><aside class="pie" id="pie" aria-live="polite"><h3>Net rezerv değişimi ve kaynakları</h3><div class="dt">Veri yükleniyor…</div></aside></div>
+  <div class="legend"><span><i style="background:var(--fx)"></i>Net rezerv (pozitif)</span><span><i style="background:var(--red)"></i>Net rezerv (negatif)</span><span><i style="background:var(--ink);height:2px;vertical-align:4px"></i>Sıfır çizgisi</span></div>
+  <div class="chartwrap"><div class="fig" id="fig" style="min-height:380px"><svg id="svg" role="img" aria-label="Net rezerv stoku çubuk grafiği"></svg><div class="tip" id="tip"></div></div><aside class="pie" id="pie" aria-live="polite"><h3>Net rezerv değişimi ve kaynakları</h3><div class="dt">Veri yükleniyor…</div></aside></div>
   <div class="rng" id="rng"></div>
   <p class="status" id="status"></p>
 </section>
@@ -172,28 +172,28 @@ function render(){const all=rows();$('sub').textContent=subTxt();
   const P=all[all.length-2];$('d2').textContent=P?df.format(new Date(P.od??P.d))+' → '+df.format(new Date(L.od??L.d)):'';
   const from=range.from??(L.d-365*864e5),to=range.to??L.d;const a0=refAt(all,from)||all.find(r=>r.d>=from);
   const view=all.filter(r=>r.d>=(a0?a0.d:from)&&r.d<=to+6*864e5);rA=view[0];rB=view[view.length-1];draw(view);renderPie();
-  $('rng').textContent=view.length>1?`Değişim: ${df.format(new Date(rA.od??rA.d))} – ${df.format(new Date(rB.od??rB.d))} · başlangıç, seçilen tarihteki ya da öncesindeki son ${freq==='d'?'iş günü':'hafta'} · Kaynak: EVDS`:'Seçili aralıkta veri yok.'}
+  $('rng').textContent=view.length>1?`Grafik ve değişim: ${df.format(new Date(rA.od??rA.d))} – ${df.format(new Date(rB.od??rB.d))} · ilk çubuk başlangıç (referans) ${freq==='d'?'günüdür':'haftasıdır'} · Kaynak: EVDS`:'Seçili aralıkta veri yok.'}
 const svg=$('svg'),tip=$('tip');
-// Çubuk = önceki gözleme göre net rezerv değişimi; x ekseni yalnızca veri olan günler/haftalar
-function draw(view){cur=view;const W=svg.clientWidth,H=svg.clientHeight;if(!W||!H)return;const v=view.slice(1);if(!v.length){svg.innerHTML='';return}
+// Çubuk = net rezerv stoku (ilk çubuk başlangıç/referans günü); değişim sağ panelde; x ekseni yalnızca veri olan günler/haftalar
+function draw(view){cur=view;const W=svg.clientWidth,H=svg.clientHeight;if(!W||!H)return;const v=view;if(!v.length){svg.innerHTML='';return}
   const narrow=W<520,m={l:narrow?34:48,r:12,t:10,b:28},w=W-m.l-m.r,h=H-m.t-m.b;
   const n=Math.max(v.length,22),idx=new Map(v.map((r,i)=>[r.d,i]));const X=d=>m.l+((idx.get(d)??0)+.5)/n*w;
-  let ymax=Math.max(0,...v.map(r=>r.dn)),ymin=Math.min(0,...v.map(r=>r.dn));const sp=(ymax-ymin)||1000;ymax+=sp*.08;ymin-=sp*.08;
+  let ymax=Math.max(0,...v.map(r=>r.n)),ymin=Math.min(0,...v.map(r=>r.n));const sp=(ymax-ymin)||1000;ymax+=sp*.08;if(ymin<0)ymin-=sp*.08;
   const Y=x=>m.t+(ymax-x)/(ymax-ymin)*h;const st=niceStep((ymax-ymin)/1000,narrow?4:6)*1000;let g='';
-  const fl=x=>{const r=Math.round(x/100)/10;return r.toLocaleString('tr-TR')};
+  const fl=x=>{const r=(Math.round(x/100)/10)||0;return r.toLocaleString('tr-TR')};
   for(let x=Math.ceil(ymin/st)*st;x<=ymax;x+=st)g+=`<line x1="${m.l}" x2="${m.l+w}" y1="${Y(x)}" y2="${Y(x)}" stroke="${css('--line')}"/><text x="${m.l-6}" y="${Y(x)+4}" text-anchor="end" font-size="12" fill="${css('--mut')}">${fl(x)}</text>`;
   const spanY=(v[v.length-1].d-v[0].d)/(365*864e5);const key=spanY>2?(d=>d.getUTCFullYear()):spanY>.25?(d=>d.getUTCFullYear()*12+d.getUTCMonth()):(d=>Math.floor((d.getTime()/864e5+3)/7));
   const lab=spanY>2?(d=>String(d.getUTCFullYear())):spanY>.25?(d=>d.toLocaleDateString('tr-TR',{month:'short',year:'2-digit',timeZone:'UTC'})):(d=>d.toLocaleDateString('tr-TR',{day:'2-digit',month:'short',timeZone:'UTC'}));
   let last=null,lx=-1e9;const gap=narrow?48:64;for(const r of v){const d=new Date(r.d),k=key(d);if(k!==last){const x=X(r.d);if(last!==null&&x-lx>=gap){g+=`<text x="${x}" y="${H-8}" text-anchor="middle" font-size="12" fill="${css('--mut')}">${lab(d)}</text>`;lx=x}else if(last===null)lx=x-gap*.6;last=k}}
   const bw=Math.min(18,Math.max(1,w/n*.75)),pc=css('--fx'),nc=css('--red');
-  for(const r of v){const y1=Y(Math.max(0,r.dn)),y2=Y(Math.min(0,r.dn));g+=`<rect x="${X(r.d)-bw/2}" y="${y1}" width="${bw}" height="${Math.max(.5,y2-y1)}" fill="${r.dn<0?nc:pc}"/>`}
-  const sr=selOff?null:v.find(r=>r.d===sel);if(sr){const y1=Y(Math.max(0,sr.dn)),y2=Y(Math.min(0,sr.dn));g+=`<rect x="${X(sr.d)-bw/2-2}" y="${y1-2}" width="${bw+4}" height="${y2-y1+4}" fill="none" stroke="${css('--ink')}" stroke-width="2"/>`}
+  for(const r of v){const y1=Y(Math.max(0,r.n)),y2=Y(Math.min(0,r.n));g+=`<rect x="${X(r.d)-bw/2}" y="${y1}" width="${bw}" height="${Math.max(.5,y2-y1)}" fill="${r.n<0?nc:pc}"/>`}
+  const sr=selOff?null:v.find(r=>r.d===sel);if(sr){const y1=Y(Math.max(0,sr.n)),y2=Y(Math.min(0,sr.n));g+=`<rect x="${X(sr.d)-bw/2-2}" y="${y1-2}" width="${bw+4}" height="${y2-y1+4}" fill="none" stroke="${css('--ink')}" stroke-width="2"/>`}
   g+=`<line x1="${m.l}" x2="${m.l+w}" y1="${Y(0)}" y2="${Y(0)}" stroke="${css('--ink')}" stroke-width="1.5"/>`;
   g+=`<line id="hx" y1="${m.t}" y2="${m.t+h}" stroke="${css('--ink')}" visibility="hidden"/><rect x="${m.l}" y="${m.t}" width="${w}" height="${h}" fill="transparent" id="hov" style="cursor:default"/>`;
   svg.innerHTML=g;const hov=svg.querySelector('#hov'),hx=svg.querySelector('#hx');
   const near=e=>{const rc=svg.getBoundingClientRect();const p=(e.touches?e.touches[0].clientX:e.clientX)-rc.left;let b=v[0],bd=1e9;for(const q of v){const dd=Math.abs(X(q.d)-p);if(dd<bd){bd=dd;b=q}}return b};
   hov.addEventListener('mousemove',e=>{const b=near(e),bx=X(b.d);hx.setAttribute('x1',bx);hx.setAttribute('x2',bx);hx.setAttribute('visibility','visible');
-    tip.innerHTML=`<b>${df.format(new Date(b.od??b.d))}</b><br>Değişim: <b>${sv(b.dn)}</b> mr $<br>Net rezerv${swx?' (swap hariç)':''}: ${lv(b.n)} mr $<br><span style="color:var(--mut)">Tıklayın: kaynaklar</span>`;tip.style.display='block';const tw=tip.offsetWidth;tip.style.left=(bx+12+tw>W?Math.max(bx-tw-12,0):bx+12)+'px';tip.style.top='12px'});
+    tip.innerHTML=`<b>${df.format(new Date(b.od??b.d))}</b><br>Net rezerv${swx?' (swap hariç)':''}: <b>${lv(b.n)}</b> mr $<br>Önceki ${freq==='d'?'güne':'haftaya'} göre: ${sv(b.dn)} mr $<br><span style="color:var(--mut)">Tıklayın: kaynaklar</span>`;tip.style.display='block';const tw=tip.offsetWidth;tip.style.left=(bx+12+tw>W?Math.max(bx-tw-12,0):bx+12)+'px';tip.style.top='12px'});
   hov.addEventListener('mouseleave',()=>{tip.style.display='none';hx.setAttribute('visibility','hidden')});
   hov.addEventListener('click',e=>{const b=near(e);if(sel===b.d&&!selOff){selOff=true;sel=null}else{sel=b.d;selOff=false}renderPie();draw(cur)})}
 function renderPie(){const el=$('pie'),all=rows();if(!all.length)return;let A,B,title;const U=freq==='d'?['Günlük','gün','güne','günü']:['Haftalık','hafta','haftaya','haftayı'];
