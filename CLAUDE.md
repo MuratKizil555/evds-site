@@ -91,8 +91,8 @@ Site sol tarafta bir menüyle bölümlere ayrılır. Her bölüm bir sayfadır.
 
 ### Kur bölümü — sayfa özellikleri
 - Seri: TP.DK.USD.A.YTL (USD/TRY, TCMB döviz alış, günlük; sitede 1987'den). Üstte iki kutu: son kur; önceki iş gününe göre fark (büyük: bps = kur farkı × 10.000, ör. 50,5866 − 50,5531 = 335 bps; altında % ve yıllıklandırılmış %; pozitif yeşil, negatif kırmızı).
-- Üstte **Kur / Yıllıklandırılmış değişim** düğmeleri tek grafiği değiştirir. Kur: USD/TRY çizgi (iş günü ekseni). Yıllıklandırılmış: her gün için kayan pencere değişiminin yıllıklandırılmış hali, çizgi, sıfır çizgisi; pencere düğmeleri 1 hafta · 1 ay · 3 ay (varsayılan 3 ay).
-- Formül (Claude önerisi, onay bekliyor): günlük değişim % = (K_t ÷ K_önceki − 1) × 100; bps = (K_t − K_önceki) × 10.000 (kullanıcı tanımı); yıllıklandırılmış % = pencere değişimi % (K_t ÷ pencere başındaki ya da öncesindeki son iş günü kuru − 1) × 365 ÷ aradaki takvim günü (basit). Kullanıcı isteği: günlük yerine haftalık (günlük grafik kötüydü); bileşik sürüm de yanlış bulundu.
+- Üstte **Kur / Yıllıklandırılmış değişim** düğmeleri tek grafiği değiştirir. Kur: USD/TRY çizgi (iş günü ekseni). Yıllıklandırılmış: her gün için kayan pencere değişiminin yıllıklandırılmış hali, çizgi, sıfır çizgisi; pencere düğmeleri 1 hafta · 1 ay · 3 ay (varsayılan 3 ay) ve Basit / Bileşik yöntem düğmeleri (varsayılan basit; Claude önerisi 3 ay + bileşik).
+- Formül (Claude önerisi, onay bekliyor): günlük değişim % = (K_t ÷ K_önceki − 1) × 100; bps = (K_t − K_önceki) × 10.000 (kullanıcı tanımı); yıllıklandırılmış % = pencere değişimi % (K_t ÷ pencere başındaki ya da öncesindeki son iş günü kuru − 1) × 365 ÷ aradaki takvim günü (basit) ya da (1 + r)^(365 ÷ gün) − 1 (bileşik). Kullanıcı isteği: günlük yerine haftalık (günlük grafik kötüydü); bileşik sürüm de yanlış bulundu.
 - Eksen %1–%99 dilimiyle sınırlanır; dışarıda kalan değerler eksen sınırında kesilir, tooltip'te tam değer.
 - Tarih: EVDS tarihleri kullanılır (TCMB kuru bir gün önce 15:30'da ilan edilir; EVDS'te uygulanacağı günün tarihini taşır). Kullanıcı ilan gününü kastedebilir.
 - Tarih kontrolleri: 1W…Tümü, varsayılan YTD. "Kaynak: EVDS".
