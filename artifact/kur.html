@@ -102,6 +102,8 @@ th{font-weight:500;color:var(--mut);font-size:13px}
 .ghost{font:600 15px Archivo,sans-serif;min-height:44px;padding:0 18px;border:1px solid var(--ink);background:var(--bg);color:var(--ink);border-radius:6px;cursor:pointer;margin-top:18px}.ghost[aria-pressed=true]{background:var(--ink);color:var(--bg)}
 .pct{font-size:18px;font-weight:600;margin-top:2px}.big.dn{color:var(--red)}.big.up{color:var(--up)}
 .note2{font-size:13px;color:var(--mut);margin:6px 0 0}
+.rbox{margin-left:auto;border:1px solid var(--line);border-radius:6px;padding:8px 14px;min-width:190px;text-align:right}.rbox b{display:block;font-size:12px;font-weight:500;color:var(--mut)}.rbox .v{font-size:22px;font-weight:800;font-stretch:112%;line-height:1.2}.rbox .v.up{color:var(--up)}.rbox .v.dn{color:var(--red)}.rbox .p{font-size:14px;font-weight:600}.rbox .p.up{color:var(--up)}.rbox .p.dn{color:var(--red)}
+@media(max-width:760px){.rbox{margin-left:0;text-align:left}}
 </style>
 </head>
 <body>
@@ -122,6 +124,7 @@ th{font-weight:500;color:var(--mut);font-size:13px}
     <div class="presets" id="presets" role="group" aria-label="Hazır aralıklar">
       <button data-y="w">1W</button><button data-y="m">1M</button><button data-y="ytd">YTD</button><button data-y="1">1Y</button><button data-y="3">3Y</button><button data-y="5">5Y</button><button data-y="10">10Y</button><button data-y="all">Tümü</button>
     </div>
+    <div class="rbox" id="rbox" aria-live="polite"><b id="rbd">Seçili aralıkta fark</b><div class="v" id="rbv">—</div><div class="p" id="rbp"></div></div>
   </div>
   <div id="w1">
   <h2 class="ch">USD/TRY</h2>
@@ -232,11 +235,13 @@ function draw2(view){const svg=$('s2');const {W,H,narrow,m}=frame(svg);if(!W||!H
   g+=`<line x1="${m.l}" x2="${m.l+w}" y1="${Y(0)}" y2="${Y(0)}" stroke="${css('--ink')}" stroke-width="1.5"/>`;
   g+=`<line class="hx" y1="${m.t}" y2="${m.t+h}" stroke="${css('--ink')}" visibility="hidden"/><rect class="hov" x="${m.l}" y="${m.t}" width="${w}" height="${h}" fill="transparent"/>`;
   svg.innerHTML=g;hover(svg,'t2',v,X,W)}
+// Aralık farkı: bps = (K_son − K_ilk) × 10.000; % = (K_son / K_ilk − 1) × 100; K_ilk başlangıç tarihindeki ya da öncesindeki son iş günü kuru
 function render(){const all=rows();if(!all.length)return;const L=all[all.length-1];
   $('k1').textContent=kf.format(L.k);$('d1').textContent='Son veri: '+df.format(new Date(L.d));
   $('k2').textContent=L.b!=null?sb(L.b):'—';$('k2').className='big '+(L.c>0?'up':L.c<0?'dn':'');$('k2p').textContent=L.c!=null?sc(L.c)+(L.a!=null?' · '+WIN[win].lab+' yıllıklandırılmış ('+(meth==='c'?'bileşik':'basit')+') '+sa(L.a):''):'';$('d2').textContent=L.pd!=null?df.format(new Date(L.pd))+' → '+df.format(new Date(L.d)):'';
   const from=range.from??(L.d-365*864e5),to=range.to??L.d;const a0=refAt(all,from)||all.find(r=>r.d>=from);
-  const view=all.filter(r=>r.d>=(a0?a0.d:from)&&r.d<=to);cur=view;if(show2)draw2(view);else draw1(view);
+  const view=all.filter(r=>r.d>=(a0?a0.d:from)&&r.d<=to);if(view.length>1){const A=view[0],B=view[view.length-1],bp=(B.k-A.k)*1e4,pc=(B.k/A.k-1)*100,cl=pc>0?'up':pc<0?'dn':'';$('rbd').textContent=df.format(new Date(A.d))+' → '+df.format(new Date(B.d));$('rbv').textContent=sb(bp);$('rbv').className='v '+cl;$('rbp').textContent=sc(pc);$('rbp').className='p '+cl}else{$('rbd').textContent='Seçili aralıkta fark';$('rbv').textContent='—';$('rbv').className='v';$('rbp').textContent=''}
+  cur=view;if(show2)draw2(view);else draw1(view);
   $('rng').textContent=view.length?'Kaynak: EVDS':'Seçili aralıkta veri yok.'}
 const ro=new ResizeObserver(()=>{if(show2)draw2(cur);else draw1(cur)});ro.observe($('s1'));ro.observe($('s2'));
 for(const b of document.querySelectorAll('#mode button'))b.addEventListener('click',()=>{show2=b.dataset.m==='a';for(const x of document.querySelectorAll('#mode button'))x.setAttribute('aria-pressed',String(x===b));$('w1').hidden=show2;$('w2').hidden=!show2;requestAnimationFrame(()=>{if(show2)draw2(cur);else draw1(cur)})});
