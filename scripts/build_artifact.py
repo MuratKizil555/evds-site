@@ -13,7 +13,7 @@ PAGES = {
     "rezerv": ("artifact_loader.js", "https://claude.ai/artifact/A7nL8d26HsA2VptJCKMDS5"),
     "kaynak": ("artifact_loader_kaynak.js", "https://claude.ai/artifact/HtQNrqBE3Bre4y2wbVEa5h"),
     "swap": (None, "https://claude.ai/artifact/QAB9sc1EuL6LyJSzPJeb7g"),  # henüz veri yok (yer tutucu sayfa)
-    "swap-bist": (None, "https://claude.ai/artifact/MQ3tBnXDdCKRH8P4Zk45SZ"),  # yer tutucu
+    "swap-bist": ("artifact_loader_swapbist.js", "https://claude.ai/artifact/MQ3tBnXDdCKRH8P4Zk45SZ"),
     "likidite": ("artifact_loader_likidite.js", "https://claude.ai/artifact/JMkyzuvXxi3eBdbDdC3nE6"),
     "cek": ("artifact_loader_cek.js", "https://claude.ai/artifact/LGLoTiPtShNDNXLzqTAq2y"),
     "altin": ("artifact_loader_altin.js", "https://claude.ai/artifact/QZK3PkxNXgnW3XNqkqoKqS"),

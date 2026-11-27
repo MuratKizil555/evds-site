@@ -110,10 +110,24 @@ th{font-weight:500;color:var(--mut);font-size:13px}
 <div class="shell"><nav class="nav" id="nav" aria-label="Bölümler"></nav><div class="main">
 <header class="band">
   <h1>BIST Swap Piyasası</h1>
-  <p class="sub">Swap · TCMB taraflı swap işlemleri</p>
+  <p class="sub">Swap · TCMB'nin Borsa İstanbul swap piyasasındaki işlem stoku · iş günü · milyar ABD doları</p>
+  <div class="tiles">
+    <div class="tile"><b>Stok</b><div class="big" id="k1">—</div><div class="date" id="d1"></div></div>
+    <div class="tile"><b>Önceki iş gününe göre değişim</b><div class="big" id="k2">—</div><div class="date" id="d2"></div></div>
+  </div>
 </header>
 <section class="band" style="padding-top:8px">
-  <p class="note2" style="font-size:15px">Bu bölüm hazırlanıyor.</p>
+  <div class="ctrl">
+    <label>Başlangıç<input type="date" id="from" min="2021-01-01"></label>
+    <label>Bitiş<input type="date" id="to" min="2021-01-01"></label>
+    <div class="presets" id="presets" role="group" aria-label="Hazır aralıklar">
+      <button data-y="w">1W</button><button data-y="m">1M</button><button data-y="ytd">YTD</button><button data-y="1">1Y</button><button data-y="3">3Y</button><button data-y="5">5Y</button><button data-y="all">Tümü</button>
+    </div>
+  </div>
+  <div class="legend"><span><i style="background:var(--fx)"></i>BIST swap stoku</span></div>
+  <div class="chartwrap"><div class="fig" id="fig" style="min-height:380px"><svg id="svg" role="img" aria-label="BIST swap stoku çubuk grafiği"></svg><div class="tip" id="tip"></div></div><aside class="pie" id="pie" aria-live="polite"><h3>Stok değişimi</h3><div class="dt">Veri yükleniyor…</div></aside></div>
+  <div class="rng" id="rng"></div>
+  <p class="status" id="status"></p>
 </section>
 </div></div>
 <script>
@@ -146,6 +160,89 @@ th{font-weight:500;color:var(--mut);font-size:13px}
   }
 }
 
+</script>
+<script>
+{
+const $=id=>document.getElementById(id);
+const NS={stk:'TP.SWAPTEKTAR.BISWAPSTOKUSDTUTAR'};
+const data={stk:new Map()};
+const MIN=Date.UTC(2021,0,1);
+const nf=new Intl.NumberFormat('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const df=new Intl.DateTimeFormat('tr-TR',{day:'2-digit',month:'2-digit',year:'numeric',timeZone:'UTC'});
+const mr=v=>nf.format(v/1000);const sign=v=>(v>0?'+':v<0?'−':'');const sv=v=>v==null?'—':sign(v)+mr(Math.abs(v));const lv=v=>v==null?'—':(v<0?'−':'')+mr(Math.abs(v));
+const iso=d=>new Date(d).toISOString().slice(0,10);
+const today=new Date();today.setUTCHours(0,0,0,0);
+let range={from:null,to:null},preset='all',cur=[],sel=null,selOff=true,rA=null,rB=null;
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim()}
+function niceStep(max,n){const raw=max/n,p=10**Math.floor(Math.log10(raw)),f=raw/p;return (f<1.5?1:f<3?2:f<7?5:10)*p}
+function refAt(arr,t){let lo=0,hi=arr.length-1,ans=null;while(lo<=hi){const m=(lo+hi)>>1;if(arr[m].d<=t){ans=arr[m];lo=m+1}else hi=m-1}return ans}
+// Stok: TP.SWAPTEKTAR.BISWAPSTOKUSDTUTAR (milyon $, iş günü); değişim = son − önceki iş günü (ya da aralık başı)
+function rows(){const out=[];let p=null;for(const d of [...data.stk.keys()].sort((a,b)=>a-b)){if(d>today.getTime())continue;const v=data.stk.get(d);out.push({d,v,dv:p==null?null:v-p});p=v}return out}
+function render(){const all=rows();
+  if(!all.length){$('k1').textContent='—';$('k2').textContent='—';svg.innerHTML='';return}
+  const L=all[all.length-1],P=all[all.length-2];$('k1').textContent=lv(L.v);$('d1').textContent='Son veri: '+df.format(new Date(L.d));
+  $('k2').textContent=sv(L.dv);$('k2').className='big '+(L.dv>0?'up':L.dv<0?'dn':'');$('d2').textContent=P?df.format(new Date(P.d))+' → '+df.format(new Date(L.d)):'';
+  const from=range.from??MIN,to=range.to??L.d;const a0=refAt(all,from)||all.find(r=>r.d>=from);
+  const view=all.filter(r=>r.d>=(a0?a0.d:from)&&r.d<=to);rA=view[0];rB=view[view.length-1];draw(view);renderPanel();
+  $('rng').textContent=view.length>1?`Grafik ve değişim: ${df.format(new Date(rA.d))} – ${df.format(new Date(rB.d))} · ilk çubuk başlangıç (referans) günüdür · Kaynak: EVDS`:'Seçili aralıkta veri yok.'}
+const svg=$('svg'),tip=$('tip');
+function draw(view){cur=view;const W=svg.clientWidth,H=svg.clientHeight;if(!W||!H)return;const v=view;if(!v.length){svg.innerHTML='';return}
+  const narrow=W<520,m={l:narrow?34:48,r:12,t:10,b:28},w=W-m.l-m.r,h=H-m.t-m.b;
+  const n=Math.max(v.length,22),idx=new Map(v.map((r,i)=>[r.d,i]));const X=d=>m.l+((idx.get(d)??0)+.5)/n*w;
+  let ymax=Math.max(0,...v.map(r=>r.v)),ymin=0;if(!ymax)ymax=1000;ymax*=1.08;
+  const Y=x=>m.t+(ymax-x)/(ymax-ymin)*h;const st=niceStep(ymax/1000,narrow?4:6)*1000;let g='';
+  const fl=x=>((Math.round(x/100)/10)||0).toLocaleString('tr-TR');
+  for(let x=0;x<=ymax;x+=st)g+=`<line x1="${m.l}" x2="${m.l+w}" y1="${Y(x)}" y2="${Y(x)}" stroke="${css('--line')}"/><text x="${m.l-6}" y="${Y(x)+4}" text-anchor="end" font-size="12" fill="${css('--mut')}">${fl(x)}</text>`;
+  const spanY=(v[v.length-1].d-v[0].d)/(365*864e5);const key=spanY>2?(d=>d.getUTCFullYear()):spanY>.25?(d=>d.getUTCFullYear()*12+d.getUTCMonth()):(d=>Math.floor((d.getTime()/864e5+3)/7));
+  const lab=spanY>2?(d=>String(d.getUTCFullYear())):spanY>.25?(d=>d.toLocaleDateString('tr-TR',{month:'short',year:'2-digit',timeZone:'UTC'})):(d=>d.toLocaleDateString('tr-TR',{day:'2-digit',month:'short',timeZone:'UTC'}));
+  let last=null,lx=-1e9;const gap=narrow?48:64;for(const r of v){const d=new Date(r.d),k=key(d);if(k!==last){const x=X(r.d);if(last!==null&&x-lx>=gap){g+=`<text x="${x}" y="${H-8}" text-anchor="middle" font-size="12" fill="${css('--mut')}">${lab(d)}</text>`;lx=x}else if(last===null)lx=x-gap*.6;last=k}}
+  const bw=Math.min(18,Math.max(1,w/n*.75)),c=css('--fx');
+  for(const r of v){if(r.v<=0)continue;const y1=Y(r.v);g+=`<rect x="${X(r.d)-bw/2}" y="${y1}" width="${bw}" height="${Math.max(.5,Y(0)-y1)}" fill="${c}"/>`}
+  const sr=selOff?null:v.find(r=>r.d===sel);if(sr){const y1=Y(Math.max(0,sr.v));g+=`<rect x="${X(sr.d)-bw/2-2}" y="${y1-2}" width="${bw+4}" height="${Y(0)-y1+4}" fill="none" stroke="${css('--ink')}" stroke-width="2"/>`}
+  g+=`<line x1="${m.l}" x2="${m.l+w}" y1="${Y(0)}" y2="${Y(0)}" stroke="${css('--ink')}" stroke-width="1.5"/>`;
+  g+=`<line id="hx" y1="${m.t}" y2="${m.t+h}" stroke="${css('--ink')}" visibility="hidden"/><rect x="${m.l}" y="${m.t}" width="${w}" height="${h}" fill="transparent" id="hov" style="cursor:default"/>`;
+  svg.innerHTML=g;const hov=svg.querySelector('#hov'),hx=svg.querySelector('#hx');
+  const near=e=>{const rc=svg.getBoundingClientRect();const p=(e.touches?e.touches[0].clientX:e.clientX)-rc.left;let b=v[0],bd=1e9;for(const q of v){const dd=Math.abs(X(q.d)-p);if(dd<bd){bd=dd;b=q}}return b};
+  hov.addEventListener('mousemove',e=>{const b=near(e),bx=X(b.d);hx.setAttribute('x1',bx);hx.setAttribute('x2',bx);hx.setAttribute('visibility','visible');
+    tip.innerHTML=`<b>${df.format(new Date(b.d))}</b><br>Stok: <b>${lv(b.v)}</b> mr $<br>Önceki iş gününe göre: ${sv(b.dv)} mr $<br><span style="color:var(--mut)">Tıklayın: günlük değişim</span>`;tip.style.display='block';const tw=tip.offsetWidth;tip.style.left=(bx+12+tw>W?Math.max(bx-tw-12,0):bx+12)+'px';tip.style.top='12px'});
+  hov.addEventListener('mouseleave',()=>{tip.style.display='none';hx.setAttribute('visibility','hidden')});
+  hov.addEventListener('click',e=>{const b=near(e);if(sel===b.d&&!selOff){selOff=true;sel=null}else{sel=b.d;selOff=false}renderPanel();draw(cur)})}
+function renderPanel(){const el=$('pie'),all=rows();if(!all.length)return;let A,B,title;
+  if(!selOff&&sel!=null){const i=all.findIndex(r=>r.d===sel);if(i<1){el.innerHTML='<h3>Günlük stok değişimi</h3><div class="dt">Önceki iş günü verisi yok.</div>';return}A=all[i-1];B=all[i];title='Günlük stok değişimi'}
+  else{A=rA;B=rB;title='Seçili aralıkta stok değişimi'}
+  if(!A||!B||A.d===B.d){el.innerHTML=`<h3>${title}</h3><div class="dt">Karşılaştırılacak gün yok.</div>`;return}
+  const dv=B.v-A.v;
+  el.innerHTML=`<h3>${title}</h3><div class="dt">${df.format(new Date(A.d))} → ${df.format(new Date(B.d))}</div>
+  <div class="side" style="margin:8px 0 10px"><table><tr><td>Başlangıç stoku</td><td>${lv(A.v)}</td></tr><tr><td>Son stok</td><td>${lv(B.v)}</td></tr><tr class="sum"><td>Stok değişimi</td><td class="${dv>0?'up':dv<0?'dn':'fl'}">${sv(dv)}</td></tr></table><div class="g" style="font-size:12px;margin-top:4px">milyar $</div></div>
+  <p class="hint">${selOff?'Bir güne tıklayarak o günün önceki iş gününe göre değişimini görebilirsiniz.':'Aralığa dönmek için aynı güne tekrar tıklayın.'}</p>`}
+const ro=new ResizeObserver(()=>draw(cur));ro.observe(svg);
+function setPreset(y){preset=y;for(const b of document.querySelectorAll('#presets button'))b.setAttribute('aria-pressed',String(b.dataset.y===y));
+  const all=rows();const end=all.length?all[all.length-1].d:today.getTime();const d=new Date(end);
+  if(y==='all')d.setTime(MIN);else if(y==='ytd')d.setTime(Date.UTC(d.getUTCFullYear(),0,1));else if(y==='w')d.setUTCDate(d.getUTCDate()-7);else if(y==='m')d.setUTCMonth(d.getUTCMonth()-1);else d.setUTCFullYear(d.getUTCFullYear()-(+y));
+  const f=Math.max(d.getTime(),MIN);selOff=true;sel=null;range={from:f,to:end};$('from').value=iso(f);$('to').value=iso(end);ensure(f);render()}
+for(const b of document.querySelectorAll('#presets button'))b.addEventListener('click',()=>setPreset(b.dataset.y));
+function onInput(){const f=Date.parse($('from').value),t=Date.parse($('to').value);if(isNaN(f)||isNaN(t))return;preset=null;for(const b of document.querySelectorAll('#presets button'))b.setAttribute('aria-pressed','false');selOff=true;sel=null;range={from:Math.min(f,t),to:Math.max(f,t)};ensure(range.from);render()}
+$('from').addEventListener('change',onInput);$('to').addEventListener('change',onInput);
+// Claude artifact sürümünün veri yükleyicisi: veriyi görüntüleyenin TCMB EVDS bağlantısından canlı çeker.
+// BIST swap stoku: 2021'den bugüne 2 yıllık parçalarla (EVDS ~1000 gözlem sınırı), açılışta hepsi.
+const SERVER='TCMB MCP',TOOL='get_series_data';let mcp=null,loadedFrom=null;const pending=new Set();
+function status(t,err){const s=$('status');s.textContent=t;s.className='status'+(err?' err':'')}
+function pdate(s){let m=/^(\d{2})-(\d{2})-(\d{4})$/.exec(s);if(m)return Date.UTC(+m[3],+m[2]-1,+m[1]);m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s);return m?Date.UTC(+m[1],+m[2]-1,+m[3]):null}
+function strs(x,o=[]){if(typeof x==='string')o.push(x);else if(Array.isArray(x))x.forEach(y=>strs(y,o));else if(x&&typeof x==='object')Object.values(x).forEach(y=>strs(y,o));return o}
+function rowsOf(p){const r=[];for(const s of strs(p))for(const line of s.split('\n')){const c=line.split('|').map(z=>z.trim()).filter(z=>z!=='');if(c.length<2)continue;const d=pdate(c[0]),n=parseFloat(c[c.length-1]);if(d!=null&&isFinite(n))r.push([d,n])}return r}
+let first=true;
+function watch(k,s,e){const tag=k+s;pending.add(tag);
+  mcp.watchTool(SERVER,TOOL,{series_code:NS[k],start_date:iso(s),end_date:iso(e),full_data:true},ev=>{
+    if(ev.type==='data'){for(const [d,v] of rowsOf(ev.result&&ev.result.payload))data[k].set(d,v);pending.delete(tag);
+      status(pending.size?'EVDS\'ten yükleniyor…':'Canlı EVDS verisi · güncellendi '+new Date().toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}));
+      if(first&&!pending.size){first=false;setPreset(preset??'all')}else if(!first)render()}
+    else if(ev.type==='error'){pending.delete(tag);status('EVDS bağlantısında hata: '+String((ev.error&&(ev.error.code||ev.error.message))||'bilinmiyor'),true)}})}
+function chunk(s,e){for(const k in NS)watch(k,s,e)}
+function ensure(from){if(!mcp||loadedFrom==null)return;while(loadedFrom>from&&loadedFrom>MIN){const e=loadedFrom-864e5;const s=new Date(loadedFrom);s.setUTCFullYear(s.getUTCFullYear()-2);const st=Math.max(s.getTime(),MIN);chunk(st,e);loadedFrom=st}}
+(async()=>{status('EVDS bağlantısı kuruluyor…');try{mcp=await window.claude.use('mcp')}catch(e){mcp=null}
+  if(!mcp){status('Bu sayfa verileri sizin TCMB EVDS bağlantınızla çeker. Bağlantı bu görünümde kullanılamıyor.',true);return}
+  loadedFrom=today.getTime()+864e5;ensure(MIN)})();
+}
 </script>
 </body>
 </html>

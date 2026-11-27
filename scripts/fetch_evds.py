@@ -35,6 +35,7 @@ KAYNAK_START = dt.date(2015, 1, 1)
 KAYNAK_EXTRA = {"A11": "TP.AB.A11", "A13": "TP.AB.A13", "A14": "TP.AB.A14"}
 SWAP = {"swA": "TP.SWAPTEKTAR.TOTALSTOKALIMYONLU", "swS": "TP.SWAPTEKTAR.TOTALSTOKSATIMYONLU"}
 SWAP_START = dt.date(2021, 1, 1)
+OUT_SWAPBIST = os.path.join(os.path.dirname(__file__), "..", "data", "swapbist.json")
 
 
 def monthly_avg(daily):
@@ -184,6 +185,13 @@ def main():
     with open(OUT_KAYNAK, "w", encoding="utf-8") as f:
         json.dump({"updated": dt.datetime.utcnow().isoformat() + "Z",
                    "series": {k: pairs(v) for k, v in kay.items()}}, f, separators=(",", ":"))
+    # BIST swap piyasası stoku (milyon $, iş günü)
+    sb = series("TP.SWAPTEKTAR.BISWAPSTOKUSDTUTAR", SWAP_START, today)
+    if not sb:
+        raise RuntimeError("swap-bist stok boş geldi")
+    print(f"swap-bist stok: {len(sb)} gözlem, son {max(sb)}")
+    with open(OUT_SWAPBIST, "w", encoding="utf-8") as f:
+        json.dump({"updated": dt.datetime.utcnow().isoformat() + "Z", "series": {"stk": pairs(sb)}}, f, separators=(",", ":"))
 
 
 if __name__ == "__main__":
