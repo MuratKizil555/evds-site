@@ -97,6 +97,7 @@ th{font-weight:500;color:var(--mut);font-size:13px}
   <h1 id="ttl">TCMB brüt rezervleri</h1>
   <p class="sub" id="sub">Haftalık resmi rezerv varlıkları, altın ve döviz kırılımıyla · milyar ABD doları</p>
   <div class="mode" id="mode" role="group" aria-label="Rezerv türü"><button data-m="brut" aria-pressed="true">Brüt rezerv</button><button data-m="net" aria-pressed="false">Net rezerv</button></div>
+  <div class="mode" id="freq" role="group" aria-label="Net rezerv sıklığı" hidden><button data-f="w" aria-pressed="true">Haftalık</button><button data-f="d" aria-pressed="false">Günlük değişim</button><span style="width:14px"></span><button data-s="0" aria-pressed="true">Swap dahil</button><button data-s="1" aria-pressed="false">Swap hariç</button></div>
   <div class="hero">
     <div>
       <div class="big" id="tot">—<small>mr $</small></div>
@@ -125,8 +126,8 @@ th{font-weight:500;color:var(--mut);font-size:13px}
 const SERVER='TCMB MCP',TOOL='get_series_data';
 const S={tot:'TP.AB.TOPLAM',gold:'TP.AB.C1',fx:'TP.AB.C2'};
 const MIN=new Date(Date.UTC(1987,11,25));
-const NS={A02:'TP.AB.A02',A10:'TP.AB.A10',usd:'TP.DK.USD.A.YTL'};const ALL={...S,...NS};
-const data={tot:new Map(),gold:new Map(),fx:new Map(),A02:new Map(),A10:new Map(),usd:new Map()};let mode='brut';
+const NS={A02:'TP.AB.A02',A10:'TP.AB.A10',A11:'TP.AB.A11',A13:'TP.AB.A13',A14:'TP.AB.A14',usd:'TP.DK.USD.A.YTL',swA:'TP.SWAPTEKTAR.TOTALSTOKALIMYONLU',swS:'TP.SWAPTEKTAR.TOTALSTOKSATIMYONLU'};const ALL={...S,...NS};
+const data={tot:new Map(),gold:new Map(),fx:new Map()};for(const k of Object.keys(NS)){data[k]=new Map();data['d'+k]=new Map()}let mode='brut',freq='w',swx=false;
 const $=id=>document.getElementById(id);
 const nf=new Intl.NumberFormat('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
 const pf=new Intl.NumberFormat('tr-TR',{minimumFractionDigits:1,maximumFractionDigits:1});
@@ -146,7 +147,15 @@ function rowsOf(payload,key){
   return res;
 }
 
-function netSeries(){const ds=[...data.A02.keys()].sort((a,b)=>a-b);const out=[];for(const d of ds){if(d>today.getTime())continue;const A=data.A02.get(d),Lb=data.A10.get(d),k=data.usd.get(d);if(A==null||Lb==null||!k)continue;const a=A/k/1000,l=Lb/k/1000;out.push({d,a,l,n:a-l})}return out}
+// Net rezerv (milyon $) = (A02 − A10) / (USD/TRY × 1000); A10 = A11 + A13 + A14 (analitik bilanço denkliği)
+// Swap hariç (Claude önerisi) = net rezerv − (alım yönlü swap stoku − satım yönlü swap stoku); swap tablosu 04.01.2021'den
+// Günlük görünümde iş günü değerleri; dn = önceki gözleme göre fark
+function netSeries(){const D=freq==='d'?'d':'';const g=k=>data[D+k];const ds=[...g('A02').keys()].sort((a,b)=>a-b);const out=[];let p=null;
+  for(const d of ds){if(d>today.getTime())continue;const A=g('A02').get(d),Lb=g('A10').get(d),k=g('usd').get(d);if(A==null||Lb==null||!k)continue;
+    const u=v=>v==null?null:v/k/1000;const a=u(A),l=u(Lb),x=u(g('A11').get(d)),h=u(g('A13').get(d)),b=u(g('A14').get(d));
+    const sa=g('swA').get(d),ss=g('swS').get(d);const sw=sa!=null&&ss!=null?sa-ss:null;
+    if(swx&&sw==null)continue;const n=a-l-(swx?sw:0);out.push({d,a,l,x,h,b,sa,ss,n,dn:p==null?null:n-p});p=n}
+  return out}
 function curSeries(){return mode==='net'?netSeries():series()}
 function series(){const ds=[...data.tot.keys()].sort((a,b)=>a-b);return ds.map(d=>({d,t:data.tot.get(d),g:data.gold.get(d),f:data.fx.get(d)})).filter(r=>r.g!=null&&r.f!=null)}
 function refAt(arr,t){let lo=0,hi=arr.length-1,ans=null;while(lo<=hi){const m=(lo+hi)>>1;if(arr[m].d<=t){ans=arr[m];lo=m+1}else hi=m-1}return ans}
@@ -248,7 +257,7 @@ function smooth(p){if(p.length<3)return 'M'+p.map(q=>q.join(',')).join('L');cons
   t[0]=m[0];t[n-1]=m[n-2];for(let i=1;i<n-1;i++)t[i]=m[i-1]*m[i]<=0?0:3*(dx[i-1]+dx[i])/((2*dx[i]+dx[i-1])/m[i-1]+(dx[i]+2*dx[i-1])/m[i]);
   let d='M'+p[0][0]+','+p[0][1];for(let i=0;i<n-1;i++){const h=dx[i]/3;d+=`C${p[i][0]+h},${p[i][1]+t[i]*h} ${p[i+1][0]-h},${p[i+1][1]-t[i+1]*h} ${p[i+1][0]},${p[i+1][1]}`}return d}
 function niceStep(max,n){const raw=max/n,p=10**Math.floor(Math.log10(raw)),f=raw/p;return (f<1.5?1:f<3?2:f<7?5:10)*p}
-const ro=new ResizeObserver(()=>mode==='net'?drawNet(cur):draw(cur));ro.observe(svg);
+const ro=new ResizeObserver(()=>mode==='net'?(freq==='d'?drawNetD(cur):drawNet(cur)):draw(cur));ro.observe(svg);
 
 function setPreset(y){preset=y;for(const b of document.querySelectorAll('#presets button'))b.setAttribute('aria-pressed',String(b.dataset.y===y));
   const all=curSeries();const end=all.length?all[all.length-1].d:today.getTime();const d=new Date(end);
@@ -260,21 +269,24 @@ $('from').addEventListener('change',onInput);$('to').addEventListener('change',o
 
 const LEG={brut:'<span><i style="background:var(--gold)"></i>Altın</span><span><i style="background:var(--fx)"></i>Döviz</span><span><i style="background:var(--red);height:3px;vertical-align:3px"></i>Toplam</span>',
  net:'<span><i style="background:var(--fx)"></i>Net rezerv (pozitif)</span><span><i style="background:var(--red)"></i>Net rezerv (negatif)</span><span><i style="background:var(--ink);height:2px;vertical-align:4px"></i>Sıfır çizgisi</span>'};
-function setMode(m){if(m===mode)return;mode=m;for(const b of document.querySelectorAll('#mode button'))b.setAttribute('aria-pressed',String(b.dataset.m===m));
+function subTxt(){return mode==='net'?(freq==='d'?'Analitik bilançoya göre dış varlıklar eksi toplam döviz yükümlülükleri'+(swx?' eksi net swap stoku':'')+' · iş günü · çubuklar önceki iş gününe göre değişim · milyar ABD doları':'Analitik bilançoya göre dış varlıklar eksi toplam döviz yükümlülükleri'+(swx?' eksi net swap stoku':'')+' · haftalık (Cuma) · milyar ABD doları'):'Haftalık resmi rezerv varlıkları, altın ve döviz kırılımıyla · milyar ABD doları'}
+function setMode(m){if(m===mode)return;mode=m;$('freq').hidden=m!=='net';for(const b of document.querySelectorAll('#mode button'))b.setAttribute('aria-pressed',String(b.dataset.m===m));
   $('ttl').textContent=m==='net'?'TCMB net rezervleri':'TCMB brüt rezervleri';
-  $('sub').textContent=m==='net'?'Analitik bilançoya göre dış varlıklar eksi toplam döviz yükümlülükleri · haftalık (Cuma) · milyar ABD doları':'Haftalık resmi rezerv varlıkları, altın ve döviz kırılımıyla · milyar ABD doları';
+  $('sub').textContent=subTxt();
   $('legend').innerHTML=LEG[m];$('svg').setAttribute('aria-label',m==='net'?'Seçili aralıkta haftalık net rezerv çubuk grafiği':'Seçili aralıkta haftalık altın ve döviz rezervlerinin yığılmış çubuk grafiği ve toplam rezerv çizgisi');
   tip.style.display='none';selOff=true;sel=null;if(preset)setPreset(preset);else render()}
 for(const b of document.querySelectorAll('#mode button'))b.addEventListener('click',()=>setMode(b.dataset.m));
+for(const b of document.querySelectorAll('#freq button[data-s]'))b.addEventListener('click',()=>{const v=b.dataset.s==='1';if(v===swx)return;swx=v;for(const x of document.querySelectorAll('#freq button[data-s]'))x.setAttribute('aria-pressed',String(x===b));$('sub').textContent=subTxt();tip.style.display='none';selOff=true;sel=null;if(preset)setPreset(preset);else render()});
+for(const b of document.querySelectorAll('#freq button[data-f]'))b.addEventListener('click',()=>{if(b.dataset.f===freq)return;freq=b.dataset.f;for(const x of document.querySelectorAll('#freq button[data-f]'))x.setAttribute('aria-pressed',String(x===b));$('sub').textContent=subTxt();$('legend').innerHTML=freq==='d'?'<span><i style="background:var(--fx)"></i>Artış</span><span><i style="background:var(--red)"></i>Azalış</span>':LEG.net;tip.style.display='none';selOff=true;sel=null;if(freq==='d')ensureD();if(preset)setPreset(preset);else render()});
 function renderNet(){
   const all=netSeries();if(!all.length){$('tot').firstChild.nodeValue='— ';$('last').textContent='Net rezerv verisi yükleniyor…';svg.innerHTML='';$('pie').innerHTML='<h3>Net rezerv değişimi</h3><div class="dt">Veri yükleniyor…</div>';return}
   const L=all[all.length-1];
   $('tot').firstChild.nodeValue=(L.n<0?'−':'')+mr(Math.abs(L.n))+' ';
-  $('last').textContent='Son veri: '+df.format(new Date(L.d))+' (Cuma)';
+  $('last').textContent='Son veri: '+df.format(new Date(L.d))+(freq==='d'?(L.dn!=null?' · önceki iş gününe göre '+sign(L.dn)+mr(Math.abs(L.dn))+' mr $':''):' (Cuma)');
   const from=range.from??(L.d-365*864e5),to=range.to??L.d;
   const a0=refAt(all,from)||all.find(r=>r.d>=from);const view=all.filter(r=>r.d>=(a0?a0.d:from)&&r.d<=to);
-  rA=a0;rB=view[view.length-1];drawNet(view);renderNetPie();
-  $('rng').textContent=view.length&&a0?`Grafik ve değişim: ${df.format(new Date(a0.d))} – ${df.format(new Date(rB.d))} · ilk çubuk başlangıç (referans) haftasıdır`:'Seçili aralıkta veri yok.';
+  rA=a0;rB=view[view.length-1];if(freq==='d')drawNetD(view);else drawNet(view);renderNetPie();
+  $('rng').textContent=view.length&&a0?`Grafik ve değişim: ${df.format(new Date(a0.d))} – ${df.format(new Date(rB.d))} · ilk çubuk başlangıç (referans) '+(freq==='d'?'günüdür':'haftasıdır')+'`:(freq==='d'&&!data.dA02.size?'Günlük veri yükleniyor…':'Seçili aralıkta veri yok.');
 }
 function drawNet(view){
   cur=view;const Wd=svg.clientWidth,H=svg.clientHeight;if(!Wd||!H)return;
@@ -299,38 +311,67 @@ function drawNet(view){
   const near=e=>{const rc=svg.getBoundingClientRect();const p=(e.touches?e.touches[0].clientX:e.clientX)-rc.left;const t=x0+(p-m.l)/w*(x1-x0);let b=view[0];for(const q of view)if(Math.abs(q.d-t)<Math.abs(b.d-t))b=q;return b};
   const f=v=>(v<0?'−':'')+mr(Math.abs(v));
   hov.addEventListener('mousemove',e=>{const b=near(e),bx=X(b.d);hx.setAttribute('x1',bx);hx.setAttribute('x2',bx);hx.setAttribute('visibility','visible');
-    tip.innerHTML=`<b>${df.format(new Date(b.d))}</b><br>Net rezerv: <b>${f(b.n)}</b> mr $<br><span style="color:var(--mut)">Tıklayın: haftalık ayrıştırma</span>`;tip.style.display='block';const tw=tip.offsetWidth;tip.style.left=(bx+12+tw>Wd?Math.max(bx-tw-12,0):bx+12)+'px';tip.style.top='12px'});
+    tip.innerHTML=`<b>${df.format(new Date(b.d))}</b><br>Net rezerv${swx?' (swap hariç)':''}: <b>${f(b.n)}</b> mr $<br><span style="color:var(--mut)">Tıklayın: haftalık kaynaklar</span>`;tip.style.display='block';const tw=tip.offsetWidth;tip.style.left=(bx+12+tw>Wd?Math.max(bx-tw-12,0):bx+12)+'px';tip.style.top='12px'});
   hov.addEventListener('mouseleave',()=>{tip.style.display='none';hx.setAttribute('visibility','hidden')});
   hov.addEventListener('click',e=>{const b=near(e);if(sel===b.d&&!selOff){selOff=true;sel=null}else{sel=b.d;selOff=false}renderNetPie();drawNet(cur)});
 }
+function drawNetD(view){
+  cur=view;const Wd=svg.clientWidth,H=svg.clientHeight;if(!Wd||!H)return;
+  const narrow=Wd<520,m={l:narrow?34:48,r:12,t:10,b:28},w=Wd-m.l-m.r,h=H-m.t-m.b;
+  const v=view.filter(r=>r.dn!=null);if(!v.length){svg.innerHTML='';return}
+  const n=Math.max(v.length,22),idx=new Map(v.map((r,i)=>[r.d,i]));const X=d=>m.l+((idx.get(d)??0)+.5)/n*w;
+  let ymax=Math.max(0,...v.map(r=>r.dn)),ymin=Math.min(0,...v.map(r=>r.dn));const sp=(ymax-ymin)||1000;ymax+=sp*.08;ymin-=sp*.08;
+  const Y=x=>m.t+(ymax-x)/(ymax-ymin)*h;const step=niceStep((ymax-ymin)/1000,narrow?4:6)*1000;let g='';
+  const fl=x=>{const r=Math.round(x/100)/10;return (Number.isInteger(r)?r:r.toLocaleString('tr-TR'))};
+  for(let x=Math.ceil(ymin/step)*step;x<=ymax;x+=step)g+=`<line x1="${m.l}" x2="${m.l+w}" y1="${Y(x)}" y2="${Y(x)}" stroke="${css('--line')}"/><text x="${m.l-6}" y="${Y(x)+4}" text-anchor="end" font-size="12" fill="${css('--mut')}">${fl(x)}</text>`;
+  const spanY=(v[v.length-1].d-v[0].d)/(365*864e5);const key=spanY>2?(d=>d.getUTCFullYear()):spanY>.25?(d=>d.getUTCFullYear()*12+d.getUTCMonth()):(d=>Math.floor((d.getTime()/864e5+3)/7));
+  const lab=spanY>2?(d=>String(d.getUTCFullYear())):spanY>.25?(d=>d.toLocaleDateString('tr-TR',{month:'short',year:'2-digit',timeZone:'UTC'})):(d=>d.toLocaleDateString('tr-TR',{day:'2-digit',month:'short',timeZone:'UTC'}));
+  let last=null,lx=-1e9;const gap=narrow?48:64;for(const r of v){const d=new Date(r.d),k=key(d);if(k!==last){const x=X(r.d);if(last!==null&&x-lx>=gap){g+=`<text x="${x}" y="${H-8}" text-anchor="middle" font-size="12" fill="${css('--mut')}">${lab(d)}</text>`;lx=x}else if(last===null)lx=x-gap*.6;last=k}}
+  const bw=Math.min(16,Math.max(1,w/n*.75)),pc=css('--fx'),nc=css('--red');
+  for(const r of v){const y1=Y(Math.max(0,r.dn)),y2=Y(Math.min(0,r.dn));g+=`<rect x="${X(r.d)-bw/2}" y="${y1}" width="${bw}" height="${Math.max(.5,y2-y1)}" fill="${r.dn<0?nc:pc}"/>`}
+  const sr=selOff?null:v.find(r=>r.d===sel);if(sr){const y1=Y(Math.max(0,sr.dn)),y2=Y(Math.min(0,sr.dn));g+=`<rect x="${X(sr.d)-bw/2-2}" y="${y1-2}" width="${bw+4}" height="${y2-y1+4}" fill="none" stroke="${css('--ink')}" stroke-width="2"/>`}
+  g+=`<line x1="${m.l}" x2="${m.l+w}" y1="${Y(0)}" y2="${Y(0)}" stroke="${css('--ink')}" stroke-width="1.5"/>`;
+  g+=`<line id="hx" y1="${m.t}" y2="${m.t+h}" stroke="${css('--ink')}" stroke-width="1" visibility="hidden"/><rect x="${m.l}" y="${m.t}" width="${w}" height="${h}" fill="transparent" id="hov" style="cursor:default"/>`;
+  svg.innerHTML=g;const hov=svg.querySelector('#hov'),hx=svg.querySelector('#hx');
+  const near=e=>{const rc=svg.getBoundingClientRect();const p=(e.touches?e.touches[0].clientX:e.clientX)-rc.left;let b=v[0],bd=1e9;for(const q of v){const dd=Math.abs(X(q.d)-p);if(dd<bd){bd=dd;b=q}}return b};
+  const f=x=>(x<0?'−':'')+mr(Math.abs(x));
+  hov.addEventListener('mousemove',e=>{const b=near(e),bx=X(b.d);hx.setAttribute('x1',bx);hx.setAttribute('x2',bx);hx.setAttribute('visibility','visible');
+    tip.innerHTML=`<b>${df.format(new Date(b.d))}</b><br>Günlük değişim: <b>${sign(b.dn)}${mr(Math.abs(b.dn))}</b> mr $<br>Net rezerv${swx?' (swap hariç)':''}: ${f(b.n)} mr $`;tip.style.display='block';const tw=tip.offsetWidth;tip.style.left=(bx+12+tw>Wd?Math.max(bx-tw-12,0):bx+12)+'px';tip.style.top='12px'});
+  hov.addEventListener('mouseleave',()=>{tip.style.display='none';hx.setAttribute('visibility','hidden')});
+  hov.addEventListener('click',e=>{const b=near(e);if(sel===b.d&&!selOff){selOff=true;sel=null}else{sel=b.d;selOff=false}renderNetPie();drawNetD(cur)});
+}
 function renderNetPie(){
-  const el=$('pie'),all=netSeries();if(!all.length)return;let A,B,title;
-  if(!selOff&&sel!=null){const i=all.findIndex(r=>r.d===sel);if(i<1){el.innerHTML='<h3>Haftalık net rezerv değişimi</h3><div class="dt">Önceki hafta verisi yok.</div>';return}A=all[i-1];B=all[i];title='Haftalık net rezerv değişimi'}
-  else{A=rA;B=rB;title='Seçili aralıkta net rezerv değişimi'}
-  if(!A||!B||A.d===B.d){el.innerHTML=`<h3>${title}</h3><div class="dt">Karşılaştırılacak hafta yok.</div>`;return}
-  const da=B.a-A.a,dl=-(B.l-A.l),dn=B.n-A.n;
-  const parts=[['Dış varlıklardaki değişim',da,css('--fx')],['Döviz yükümlülüklerindeki değişim (−)',dl,css('--gold')]];
-  const den=Math.abs(da)+Math.abs(dl);const R=86,ri=52,c=90;let pie='',ang=0;
+  const el=$('pie'),all=netSeries();if(!all.length)return;let A,B,title;const U=freq==='d'?['Günlük','gün']:['Haftalık','hafta'];
+  if(!selOff&&sel!=null){const i=all.findIndex(r=>r.d===sel);if(i<1){el.innerHTML=`<h3>Net rezerv değişimi ve kaynakları</h3><div class="dt">Önceki ${U[1]} verisi yok.</div>`;return}A=all[i-1];B=all[i];title=U[0]+' · net rezerv değişimi ve kaynakları'}
+  else{A=rA;B=rB;title='Net rezerv değişimi ve kaynakları'}
+  if(!A||!B||A.d===B.d){el.innerHTML=`<h3>${title}</h3><div class="dt">Karşılaştırılacak ${U[1]} yok.</div>`;return}
+  const dv=(k,s)=>A[k]==null||B[k]==null?null:s*(B[k]-A[k]);
+  const parts=[['Dış varlıklar',dv('a',1),css('--fx')],['Dış yükümlülükler (−)',dv('x',-1),'#8a8f98'],['Kamu ve diğer döviz mevduatı (−)',dv('h',-1),css('--gold')],['Bankalar döviz mevduatı (−)',dv('b',-1),'#2f8f83']];
+  if(swx)parts.push(['Alım yönlü swap stoku (−)',dv('sa',-1),'#b0563b'],['Satım yönlü swap stoku (+)',dv('ss',1),'#7b5ea7']);
+  const dn=B.n-A.n,P=parts.filter(q=>q[1]!=null);
+  const den=P.reduce((t,q)=>t+Math.abs(q[1]),0);const R=86,ri=52,c=90;let pie='',ang=0;
   if(!den)pie=`<circle cx="${c}" cy="${c}" r="${(R+ri)/2}" fill="none" stroke="${css('--line')}" stroke-width="${R-ri}"/>`;
-  else for(const [n,v,k] of parts){const sh=Math.abs(v)/den;if(sh<=0)continue;if(sh>=.9999){pie+=`<circle cx="${c}" cy="${c}" r="${(R+ri)/2}" fill="none" stroke="${k}" stroke-width="${R-ri}"/>`;break}const a1=ang+sh*2*Math.PI;pie+=`<path d="${arc(c,c,R,ri,ang,a1)}" fill="${k}"/>`;ang=a1}
+  else for(const [n,v,k] of P){const sh=Math.abs(v)/den;if(sh<=0)continue;if(sh>=.9999){pie+=`<circle cx="${c}" cy="${c}" r="${(R+ri)/2}" fill="none" stroke="${k}" stroke-width="${R-ri}"/>`;break}const a1=ang+sh*2*Math.PI;pie+=`<path d="${arc(c,c,R,ri,ang,a1)}" fill="${k}"/>`;ang=a1}
   pie+=`<text x="${c}" y="${c-4}" text-anchor="middle" font-size="12" fill="${css('--mut')}">Net</text><text x="${c}" y="${c+16}" text-anchor="middle" font-size="17" font-weight="700" fill="${css('--ink')}">${sign(dn)}${mr(Math.abs(dn))}</text>`;
-  const li=(n,v,k)=>`<tr><td><span class="k" style="background:${k}"></span>${n}</td><td class="${v>0?'up':v<0?'dn':'fl'}">${sign(v)}${mr(Math.abs(v))}</td></tr>`;
-  const side=`<div class="side"><table>${parts.map(p=>li(...p)).join('')}<tr class="sum"><td>Net rezerv değişimi</td><td class="${dn>0?'up':dn<0?'dn':'fl'}">${sign(dn)}${mr(Math.abs(dn))}</td></tr></table><div class="g" style="font-size:12px;margin-top:4px">milyar $</div></div>`;
-  const f=v=>(v<0?'−':'')+mr(Math.abs(v));
-  el.innerHTML=`<h3>${title}</h3><div class="dt">${df.format(new Date(A.d))} → ${df.format(new Date(B.d))}</div><div class="pierow"><svg viewBox="0 0 180 180" role="img" aria-label="Net rezerv değişiminin dış varlıklar ve döviz yükümlülüklerine ayrışması">${pie}</svg>${side}</div>
-  <table style="margin-top:8px"><tr><th></th><th>Başlangıç</th><th>Son</th></tr><tr><td>Dış varlıklar</td><td>${mr(A.a)}</td><td>${mr(B.a)}</td></tr><tr><td>Döviz yükümlülükleri</td><td>${mr(A.l)}</td><td>${mr(B.l)}</td></tr><tr><td><b>Net rezerv</b></td><td><b>${f(A.n)}</b></td><td><b>${f(B.n)}</b></td></tr></table>
-  <p class="hint">${selOff?'Bir haftaya tıklayarak o haftayı görebilirsiniz.':'Aralığa dönmek için aynı haftaya tekrar tıklayın.'} Yükümlülük artışı net rezervi azalttığı için eksi işaretle gösterilir. Kaynak: analitik bilanço TP.AB.A02, TP.AB.A10; kur TP.DK.USD.A.YTL.</p>`;
+  const li=(n,v,k)=>`<tr><td><span class="k" style="background:${k}"></span>${n}</td><td class="${v==null?'fl':v>0?'up':v<0?'dn':'fl'}">${v==null?'—':sign(v)+mr(Math.abs(v))}</td></tr>`;
+  const side=`<div class="side"><table>${parts.map(q=>li(...q)).join('')}<tr class="sum"><td>Net rezerv değişimi${swx?' (swap hariç)':''}</td><td class="${dn>0?'up':dn<0?'dn':'fl'}">${sign(dn)}${mr(Math.abs(dn))}</td></tr></table><div class="g" style="font-size:12px;margin-top:4px">milyar $</div></div>`;
+  const f=v=>v==null?'—':(v<0?'−':'')+mr(Math.abs(v));
+  const swr=swx?`<tr><td>Swap stoku (alım − satım)</td><td>${f(A.sa-A.ss)}</td><td>${f(B.sa-B.ss)}</td></tr>`:'';
+  el.innerHTML=`<h3>${title}</h3><div class="dt">${df.format(new Date(A.d))} → ${df.format(new Date(B.d))}</div><div class="pierow"><svg viewBox="0 0 180 180" role="img" aria-label="Net rezerv değişiminin kaynaklarına ayrışması">${pie}</svg>${side}</div>
+  <table style="margin-top:8px"><tr><th></th><th>Başlangıç</th><th>Son</th></tr><tr><td>Dış varlıklar</td><td>${mr(A.a)}</td><td>${mr(B.a)}</td></tr><tr><td>Döviz yükümlülükleri</td><td>${mr(A.l)}</td><td>${mr(B.l)}</td></tr>${swr}<tr><td><b>Net rezerv${swx?' (swap hariç)':''}</b></td><td><b>${f(A.n)}</b></td><td><b>${f(B.n)}</b></td></tr></table>
+  <p class="hint">${selOff?`Bir ${U[1]}e tıklayarak o ${U[1]}ü görebilirsiniz.`:`Aralığa dönmek için aynı ${U[1]}e tekrar tıklayın.`} Yükümlülük ve alım yönlü swap stoku artışı net rezervi azalttığı için eksi işaretle gösterilir. TCMB günlük döviz alım-satımını yayımlamaz; dış varlıklardaki değişim parite, altın fiyatı ve Hazine işlemlerini de içerir.${swx?' Swap tablosu yurt içi piyasa swaplarını kapsar, merkez bankalarıyla yapılan swapları kapsamaz; 04.01.2021 öncesi yoktur.':''} Kaynak: EVDS.</p>`;
 }
 
 /*LOADER-START*/
 function status(t,err){const s=$('status');s.textContent=t;s.className='status'+(err?' err':'')}
 function ensure(){}
+function ensureD(){}
 (async()=>{
   status('Veriler yükleniyor…');
   try{
     const r=await fetch('../data/rezerv.json',{cache:'no-cache'});if(!r.ok)throw new Error('HTTP '+r.status);
     const j=await r.json();const P=x=>Date.parse(x+'T00:00:00Z');
-    for(const k of ['tot','gold','fx','A02','A10','usd'])for(const [d,v] of (j.series[k]||[]))data[k].set(P(d),v);
+    for(const k of Object.keys(data))for(const [d,v] of (j.series[k]||[]))data[k].set(P(d),v);
     for(const [d,v] of (j.series.px||[]))px.set(P(d),v);pxArr=[...px.entries()].sort((a,b)=>a[0]-b[0]);
     status('Kaynak: TCMB EVDS · veriler her iş günü otomatik güncellenir · son güncelleme '+new Date(j.updated).toLocaleString('tr-TR',{dateStyle:'short',timeStyle:'short'}));
     setPreset('ytd');
