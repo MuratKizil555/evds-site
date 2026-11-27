@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Swap · EVDS Pano</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: sakin, kesin; bir gazetenin ekonomi grafik masası (Rezerv sayfasıyla aynı dil)
+   IDEA: İsviçre tarifesi — sol kenara asılı büyük rakamlar, kalın üst çizgi
+   PICTURE: altın + döviz yığılmış alan grafiği, toplam çizgisi, hover ile haftalık değer
+   COLOUR and TYPE: beyaz zemin, siyah mürekkep, altın için okra, düşüşte sinyal kırmızısı; Archivo
+   LAYOUT: başlık + toplam, değişim şeridi, grafik, altında kırılım kartları ve tablo */
+:root{color-scheme:light dark;--bg:light-dark(#fff,#0e0e0e);--ink:light-dark(#111,#f0efec);--mut:light-dark(#6b6a66,#a3a29b);--line:light-dark(#e3e2dc,#2a2a28);--soft:light-dark(#f5f4ef,#181817);--red:light-dark(#d4002a,#ff5a6e);--up:light-dark(#0a7d3b,#3ccf7a);--gold:light-dark(#c3921b,#d9a93a);--fx:light-dark(#173a73,#4f7fd1)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Archivo,system-ui,sans-serif;overflow-x:clip;font-variant-numeric:tabular-nums}
+.band{padding:clamp(22px,4vw,48px) max(4vw,16px);max-width:1240px;margin:0}
+.shell{display:grid;grid-template-columns:220px minmax(0,1fr);min-height:100vh}
+.nav{background:var(--ink);color:var(--bg);padding:24px 16px;position:sticky;top:0;height:100vh;overflow:auto}
+.nav .brand{font-weight:800;font-stretch:112%;font-size:22px;line-height:1.1;margin:0 0 4px}
+.nav .tag{font-size:12px;opacity:.7;margin:0 0 22px}
+.nav a{display:block;color:var(--bg);text-decoration:none;padding:10px 12px;border-radius:6px;font-weight:500;min-height:44px;opacity:.85}
+.nav a:hover{opacity:1;background:color-mix(in srgb,var(--bg) 12%,transparent)}
+.nav a[aria-current=page]{opacity:1;background:var(--bg);color:var(--ink)}
+.nav .soon{display:block;padding:10px 12px;font-size:14px;opacity:.45}
+@media(max-width:860px){.shell{grid-template-columns:1fr}.nav{position:static;height:auto;display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:12px 16px}.nav .tag,.nav .soon{display:none}.nav .brand{margin:0 12px 0 0;font-size:18px}}
+.band{max-width:1240px}
+
+header.band{padding-bottom:12px}
+h1{font-size:clamp(30px,4.4vw,46px);line-height:1.05;margin:0 0 6px;font-weight:800;font-stretch:112%;text-wrap:balance}
+.sub{color:var(--mut);margin:0;font-size:15px}
+.hero{display:grid;grid-template-columns:minmax(0,1fr);gap:24px;align-items:end;margin-top:22px}
+.big{font-size:clamp(44px,7vw,76px);font-weight:800;font-stretch:112%;line-height:1}
+.big small{font-size:.38em;font-weight:500;color:var(--mut);margin-left:6px}
+.date{font-size:14px;color:var(--mut);margin-top:6px}
+.chips{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:2px solid var(--ink)}
+.chip{padding:10px 10px 4px 0}
+.chip b{display:block;font-size:13px;font-weight:500;color:var(--mut)}
+.chip .v{font-size:20px;font-weight:700;white-space:nowrap}
+.chip .p{font-size:13px;white-space:nowrap}
+.up{color:var(--up)}.dn{color:var(--red)}.fl{color:var(--mut)}
+.ctrl{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:end;padding-top:6px;padding-bottom:6px}
+.ctrl label{display:flex;flex-direction:column;font-size:13px;color:var(--mut);gap:4px}
+input[type=date]{font:16px Archivo,sans-serif;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);min-height:44px}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+.presets button{font:500 14px Archivo,sans-serif;min-height:44px;padding:0 14px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:6px;cursor:pointer}
+.presets button[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.mode{display:flex;gap:6px;margin-top:14px}.mode button{font:600 15px Archivo,sans-serif;min-height:44px;padding:0 18px;border:1px solid var(--ink);background:var(--bg);color:var(--ink);border-radius:6px;cursor:pointer}.mode button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+.legend{display:flex;gap:18px;font-size:13px;color:var(--mut);margin:4px 0 8px;flex-wrap:wrap}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.fig{position:relative;min-height:360px}.fig>svg{position:absolute;inset:0;width:100%;height:100%}
+.chartwrap{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:24px;align-items:start}
+.pie{border-top:5px solid var(--gold);padding-top:10px;font-size:14px}
+.pie h3{font-size:17px;margin:0 0 2px;font-weight:700}.pie .dt{color:var(--mut);font-size:13px;margin-bottom:8px}
+.pie svg{display:block;width:120px;height:120px;flex:none}
+.pierow{display:flex;gap:14px;align-items:center;margin:6px 0 10px}
+.side{border-left:2px solid var(--ink);padding-left:14px;flex:1}
+.side table{font-size:13px}.side td{border:0;padding:4px 0 4px 8px}.side td:first-child{padding-left:0;white-space:normal}
+.side .g{color:var(--mut);font-weight:400}.side tr.sum td{border-top:2px solid var(--ink);font-weight:700;padding-top:7px}
+@media(max-width:420px){.pierow{flex-direction:column;align-items:flex-start}}
+.pie table{font-size:13px}.pie .k{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.pie .hint{color:var(--mut);font-size:13px;margin-top:8px}
+@media(max-width:760px){.chartwrap{grid-template-columns:1fr}}
+.tip{position:absolute;pointer-events:none;background:var(--bg);border:1px solid var(--ink);padding:8px 10px;font-size:13px;line-height:1.45;white-space:nowrap;display:none;z-index:2}
+.tip b{font-weight:700}
+.rng{font-size:14px;color:var(--mut);margin-top:8px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:18px}
+.card{border-top:5px solid var(--c);padding-top:12px}
+.card h2{font-size:20px;margin:0;font-weight:700;display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.card h2 span{font-size:14px;font-weight:500;color:var(--mut)}
+.card .val{font-size:34px;font-weight:800;font-stretch:112%;margin:4px 0 2px}
+.card p{margin:0 0 10px;font-size:14px;color:var(--mut)}
+.share{height:8px;background:var(--soft);border-radius:4px;overflow:hidden;margin:6px 0 12px}.share>div{height:100%;background:var(--c)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:500;color:var(--mut);font-size:13px}
+.scroll{overflow-x:auto}
+.note{font-size:14px;color:var(--mut);border-top:2px solid var(--ink);padding-top:14px}
+.note p{margin:0 0 10px}
+.frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 4px;font-size:14px}
+.frac>span:first-child{border-bottom:1px solid currentColor;padding:0 4px}
+.frac>span:last-child{padding:0 4px}
+.math{color:var(--ink);font-size:15px;display:inline-flex;align-items:center;flex-wrap:wrap;gap:2px}
+.status{font-size:13px;color:var(--mut)}
+.status.err{color:var(--red)}
+@media(max-width:700px){.hero{grid-template-columns:1fr}.chips{grid-template-columns:repeat(2,minmax(0,1fr))}.fig{min-height:280px}}
+@media(prefers-reduced-motion:no-preference){.share>div{transition:width .4s}}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:24px;margin-top:22px}
+.tile>b{display:block;font-size:14px;font-weight:500;color:var(--mut);margin-bottom:4px}
+.ch{font-size:18px;font-weight:700;margin:0 0 4px}
+.pie td,.pie th{white-space:nowrap}
+.lk .chartwrap{grid-template-columns:minmax(0,1fr)}
+.lk .pie{max-width:none}
+.cards2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:24px;margin-top:8px}
+.cards2>div{border-top:2px solid var(--ink);padding-top:10px}.cards2 b{display:block;font-size:13px;font-weight:500;color:var(--mut)}.cards2 .v{font-size:34px;font-weight:800;font-stretch:112%;line-height:1.1}.cards2 .c{font-size:14px;margin-top:2px}
+.pick{margin:6px 0 12px}.pick b{display:block;font-size:13px;font-weight:500;color:var(--mut)}.pick span{font-size:30px;font-weight:800;font-stretch:112%}
+.hov{cursor:default}
+.ghost{font:600 15px Archivo,sans-serif;min-height:44px;padding:0 18px;border:1px solid var(--ink);background:var(--bg);color:var(--ink);border-radius:6px;cursor:pointer;margin-top:18px}.ghost[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+.pct{font-size:18px;font-weight:600;margin-top:2px}.big.dn{color:var(--red)}.big.up{color:var(--up)}
+.note2{font-size:13px;color:var(--mut);margin:6px 0 0}
+.rbox{margin-left:auto;border:1px solid var(--line);border-radius:6px;padding:8px 14px;min-width:190px;text-align:right}.rbox b{display:block;font-size:12px;font-weight:500;color:var(--mut)}.rbox .v{font-size:22px;font-weight:800;font-stretch:112%;line-height:1.2}.rbox .v.up{color:var(--up)}.rbox .v.dn{color:var(--red)}.rbox .p{font-size:14px;font-weight:600}.rbox .p.up{color:var(--up)}.rbox .p.dn{color:var(--red)}
+@media(max-width:760px){.rbox{margin-left:0;text-align:left}}
+</style>
+</head>
+<body>
+<div class="shell"><nav class="nav" id="nav" aria-label="Bölümler"></nav><div class="main">
+<header class="band">
+  <h1>Swap</h1>
+  <p class="sub">TCMB taraflı swap işlemleri</p>
+</header>
+<section class="band" style="padding-top:8px">
+  <p class="note2" style="font-size:15px">Bu bölüm hazırlanıyor.</p>
+</section>
+</div></div>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

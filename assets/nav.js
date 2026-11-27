@@ -3,6 +3,7 @@
   const SECTIONS = [
     { id: 'rezerv', title: 'Rezerv', href: '../rezerv/' },
     { id: 'kaynak', title: 'Rezerv kaynakları', href: '../kaynak/' },
+    { id: 'swap', title: 'Swap', href: '../swap/' },
     { id: 'likidite', title: 'Likidite', href: '../likidite/' },
     { id: 'cek', title: 'Çek', href: '../cek/' },
     { id: 'altin', title: 'Altın', href: '../altin/' },

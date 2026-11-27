@@ -71,6 +71,7 @@ Site sol tarafta bir menüyle bölümlere ayrılır. Her bölüm bir sayfadır.
 - Altın: https://claude.ai/artifact/QZK3PkxNXgnW3XNqkqoKqS (slug bec51bae-a7ea-40dc-8755-88921ff0e611)
 - Kur: https://claude.ai/artifact/1fnytfkzMBygSbW9XF5Teq (slug 056a9998-6a00-4908-b34c-29a9e42e70fa)
 - Rezerv kaynakları: https://claude.ai/artifact/HtQNrqBE3Bre4y2wbVEa5h (slug 88bf8eae-2be7-4968-af65-eae9db0151bc)
+- Swap: https://claude.ai/artifact/QAB9sc1EuL6LyJSzPJeb7g (slug bb8a23dd-bb4e-4d84-b1ff-3955788871a3) — şimdilik yer tutucu, veri yok; mcp yeteneği veri eklenince declare_capabilities ile tanımlanacak (PAGES'te yükleyici None).
 - `scripts/build_artifact.py` PAGES listesindeki her sayfa için artifact/<sayfa>.html üretir. Yeni sayfa: PAGES'e ekle, yeni artifact oluştur, mcp yeteneğini declare_capabilities ile tanımla.
 
 ### Rezerv kaynakları bölümü — sayfa özellikleri (menüde Rezerv'in altında; Rezerv sayfasına dokunulmaz — kullanıcı isteği)
@@ -80,6 +81,10 @@ Site sol tarafta bir menüyle bölümlere ayrılır. Her bölüm bir sayfadır.
 - Sağ panel: seçili aralık ya da tıklanan çubuk için pasta + liste: Dış varlıklar (A02) + Dış yükümlülükler (−, A11) + Kamu ve diğer döviz mevduatı (−, A13) + Bankalar döviz mevduatı (−, A14) [+ swap hariçte: Alım yönlü swap stoku (−) + Satım yönlü swap stoku (+)] = Net rezerv değişimi. Kalemler aynı günün kuruyla $'a çevrilir. Denklik A10 = A11 + A13 + A14 (kontrol edildi, ±1 bin TL). İkinci tıklama aralığa döner.
 - Swap hariç (Claude önerisi, onay bekliyor): net rezerv − (TP.SWAPTEKTAR.TOTALSTOKALIMYONLU − TP.SWAPTEKTAR.TOTALSTOKSATIMYONLU), milyon $, bie_swaptektarf (TCMB taraflı swap işlemleri, iş günü, 04.01.2021'den; yurt içi piyasa swapları, merkez bankalarıyla swaplar dahil değil).
 - Veri: site data/kaynak.json (fetch_evds.py); artifact scripts/artifact_loader_kaynak.js (önce son 2 yıl, eski tarih seçilince 2 yıllık parçalarla 2015'e kadar).
+
+### Swap bölümü (27.11.2026'da kullanıcı isteğiyle açıldı; menüde Rezerv kaynakları'nın altında)
+- Şimdilik yalnızca başlık ("Bu bölüm hazırlanıyor"). İçerik kullanıcıyla seri listesi gözden geçirildikten sonra eklenecek.
+- Aday veri grubu: bie_swaptektarf (TCMB Taraflı Swap İşlemleri, iş günü, milyon $, 04.01.2021'den, 22 seri): döviz karşılığı TL swap piyasası (akım/stok), BIST swap piyasası, TL karşılığı altın swap piyasası, döviz karşılığı TL swap geleneksel ihaleleri (alım/satım yönlü), miktar ihaleleri, altın karşılığı TL swap ihaleleri, döviz karşılığı altın swap (net alım), toplam stok alım/satım yönlü (TOTALSTOKALIMYONLU / TOTALSTOKSATIMYONLU), depo işlemine dönenler.
 
 ### Likidite bölümü — sayfa özellikleri
 - Seriler (bie_apifon, iş günü, milyon TL / %): TP.APIFON1.TOP (fonlama), TP.APIFON2.TOP (sterilizasyon), TP.APIFON3 (net fonlama = A−B, TCMB yayımlar), TP.APIFON4 (AOFM). 2011'den beri.
